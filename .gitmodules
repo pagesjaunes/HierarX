@@ -1,0 +1,6 @@
+[submodule "third_party/annoy"]
+	path = third_party/annoy
+	url = https://github.com/spotify/annoy
+[submodule "third_party/argh"]
+	path = third_party/argh
+	url = https://github.com/adishavit/argh
