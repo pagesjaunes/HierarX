@@ -74,7 +74,7 @@ It requires cmake >= 3.14 and gcc or clang.
 
 ```bash
 # Clone HierarX
-git clone https://github.com/ftorregrossa/HierarX
+git clone https://github.com/pagesjaunes/HierarX
 cd HierarX
 
 # Setup dependencies
