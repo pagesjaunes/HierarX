@@ -2,11 +2,11 @@ HierarX is a software aiming to build hyperbolic word representations.
 
 Copyright (C) 2019 Solocal-SA and CNRS.
 
-HierarX was developped by François Torregrossa, Guillaume Gravier, Vincent Claveau, Nihel Kooli.
+HierarX was developped by [François Torregrossa][1], Guillaume Gravier, Vincent Claveau, Nihel Kooli.
 
 HierarX is published under the GNU AFFERO License, Version 3.0.
 
-See [License](#license) section
+[1]: https://github.com/ftorregrossa
 
 # HierarX
 
@@ -73,16 +73,16 @@ HierarX compiles on any OS (MacOS, Linux, Windows). It requires [annoy](https://
 It requires cmake >= 3.14 and gcc or clang.
 
 ```bash
-# Setup dependencies
-git clone https://github.com/spotify/annoy
-git clone https://github.com/adishavit/argh
-export ANNOY_HOME=${PWD}/annoy
-export ARGH_HOME=${PWD}/argh
-
-# Install HierarX
+# Clone HierarX
 git clone https://github.com/ftorregrossa/HierarX
-mkdir hierarx/build
-cd hierarx/build
+cd HierarX
+
+# Setup dependencies
+git submodule update --init --recursive
+export ANNOY_HOME=${PWD}/third_party/annoy
+export ARGH_HOME=${PWD}/third_party/argh
+
+cd HierarX/build
 cmake ..
 make HierarX
 ```
