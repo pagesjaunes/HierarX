@@ -135,7 +135,7 @@ HierarX \
 -thread=8 \
 -expdir=/path/to/experiment/directory \
 -input=/path/to/embedding.vec \
--hmode=Poincaré \
+-hmode=Poincare \
 -niter=1000000 \
 -lr=0.01 \
 -momentum=0.9 \
@@ -213,7 +213,7 @@ HierarX \
 -thread=8 \
 -expdir=/path/to/experiment/directory \
 -input=/path/to/similarity.csv \
--hmode=Poincaré \
+-hmode=Poincare \
 -niter=1000000 \
 -lr=0.01 \
 -momentum=0.9 \
