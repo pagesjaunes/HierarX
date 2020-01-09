@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.14)
 project(HierarX)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -O3")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -pthread")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -pthread -O3")
 
 include_directories($ENV{ANNOY_HOME}/src)
 include_directories($ENV{ARGH_HOME})
