@@ -29,24 +29,44 @@
 #include <utility>
 #include <fstream>
 #include <string>
+#include <mutex>
 #include "annoylib.h"
 #include "kissrandom.h"
 #include "EuclideanGeometry.h"
 #include "Random.h"
 #include "Args.h"
 
+
 class VecBinder {
 
 
 
 private:
+
+    class SynchronizedVector {
+
+    private:
+        std::mutex mutex;
+
+    public:
+        std::vector<double> vec;
+
+        SynchronizedVector();
+        explicit SynchronizedVector(std::vector<double>);
+
+        bool try_lock();
+        void unlock();
+        void setvec(std::vector<double>);
+    };
+
     int voc_size;
     int dim;
     AnnoyIndex<int, double, Angular, Kiss32Random>* ai;
-    matrix* vectors;
+    std::vector<VecBinder::SynchronizedVector>* vectors;
     std::vector<std::string>* vocab;
 
 public:
+
     struct LineReader {
         std::string line;
         int idx;
@@ -61,6 +81,7 @@ public:
     std::vector<std::string> getVocab();
 
     static void readtill(LineReader*, char, std::string*);
+    void unlock(int);
 };
 
 
