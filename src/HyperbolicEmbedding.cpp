@@ -148,7 +148,7 @@ HyperbolicEmbedding HyperbolicEmbedding::load(const char* filename) {
         case hierarx::HYPERBOLIC_SPACE::Poincare:
             ifs.read((char*) &args.celerity, sizeof(double));
             coordsDim = args.dim;
-            args.pmf = new PoincareVector::PoincareManifold(args.celerity, args.dim);
+            args.pmf = new PoincareVector::PoincareManifold(args.celerity, args.dim, false);
             std::cout << "Poincare space (celerity: " << args.celerity << ")";
             break;
         case hierarx::HYPERBOLIC_SPACE::Poincare_Stack:

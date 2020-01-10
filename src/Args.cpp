@@ -66,7 +66,8 @@ Args::Args(argh::parser& cmdl) {
     nesterov = cmdl["nesterov"];
     declr = cmdl["declr"];
     movie = cmdl["movie"];
-    pmf = new PoincareVector::PoincareManifold(celerity, dim);
+    lorentzian = cmdl["lorentzian"];
+    pmf = new PoincareVector::PoincareManifold(celerity, dim, lorentzian);
 
     std::cout
             << "\tlearning rate (-lr): " << lr << std::endl
@@ -88,6 +89,7 @@ Args::Args(argh::parser& cmdl) {
             << "\tminimum learning rate (-minlr): " << minlr << std::endl
             << "\tcheckpoint (-checkpoint): " << checkpoint << std::endl
             << "\tmovie (--movie): " << (movie ? "ON" : "OFF") << std::endl
+            << "\tlorentzian distance (only for Poincaré embeddings, celerity = beta, --lorentzian): " << (lorentzian ? "ON" : "OFF") << std::endl
             << std::endl;
 
     if (hmode == "Poincare") {
@@ -118,7 +120,7 @@ Args::Args() {
     plateau = 0.10;
     celerity = 1.0;
     checkpoint = 10000;
-    pmf = new PoincareVector::PoincareManifold(celerity, dim);
+
     hmode = "Poicnare";
     niter = 100000;
     similarity = false;
@@ -126,6 +128,9 @@ Args::Args() {
     continue__ = false;
     nesterov = true;
     movie =false;
+    lorentzian=false;
     format = hierarx::HYPERBOLIC_SPACE::Poincare;
+
+    pmf = new PoincareVector::PoincareManifold(celerity, dim, lorentzian);
 
 }

@@ -27,8 +27,8 @@
 
 #define MIN_VALUE 1e-6
 #define EPSILON 1e-5
-#define MIN_INIT -0.001
-#define MAX_INIT 0.001
+#define MIN_INIT_POINCARE -0.01
+#define MAX_INIT_POINCARE 0.01
 
 #include <iostream>
 #include <vector>
@@ -56,11 +56,12 @@ public:
         double sqrt_celerity;
         int dim;
         double MIN_NORM = MIN_VALUE;
+        bool lorentzian_distance;
 
     public:
 
         PoincareManifold();
-        PoincareManifold(double, int);
+        PoincareManifold(double, int, bool);
 
         void mobiusAdd(const double*, const double*, double*) const;
         void mobiusDot(const double, const double*, double*) const;
@@ -71,6 +72,7 @@ public:
         double getCelerity();
         double getSqrtCelerity();
         int getDim();
+        bool isLorentzian();
 
 
     };
