@@ -103,14 +103,19 @@ void PoincareVector::diffDist(HyperbolicVector* hvector, std::pair<HyperbolicVec
     mat->at(1) = hvector->get_coordinates();
 
     PoincareManifold* mf = this->manifold;
-    std::vector<matrix> subgrad = NumericalDifferentiate::diff([mf](matrix* m, double* tmp){mf->diffHelp(m, tmp);}, mat, this->dim);
-    double normsquare = EuclideanGeometry::normsquare(diff, this->dim);
-    std::vector<double> diffcoords = 2 / ((1 - normsquare) * sqrt(normsquare)) * std::vector<double>(diff, diff + this->dim);
+    matrix grad;
+    if (!mf->isLorentzian()) {
+        std::vector<matrix> subgrad = NumericalDifferentiate::diff([mf](matrix* m, double* tmp){mf->diffHelp(m, tmp);}, mat, this->dim);
+        double normsquare = EuclideanGeometry::normsquare(diff, this->dim);
+        std::vector<double> diffcoords = 2 / ((1 - normsquare) * sqrt(normsquare)) * std::vector<double>(diff, diff + this->dim);
 
-    matrix grad = EuclideanGeometry::tensMult(
-            &diffcoords,
-            &subgrad
-    );
+        grad = EuclideanGeometry::tensMult(
+                &diffcoords,
+                &subgrad
+        );
+    } else {
+        grad = NumericalDifferentiate::diff([mf](matrix *m, double *tmp) { mf->diffHelp(m, tmp); }, mat, 1)[0];
+    }
 
     gradslist.first->eucadd(grad[0], gradslist.first);
     gradslist.first->eucmul(coeff, gradslist.first);
@@ -169,7 +174,7 @@ HyperbolicVector *PoincareVector::buffer() const {
 
 void PoincareVector::randomize() {
 
-    std::vector<double> rsample = Random::DoubleVector(MIN_INIT, MAX_INIT, this->dim);
+    std::vector<double> rsample = Random::DoubleVector(MIN_INIT_POINCARE, MAX_INIT_POINCARE, this->dim);
     for (int i = 0; i < this->dim; i++) {
         this->coordinates[i] = rsample.at(i);
     }
@@ -231,10 +236,11 @@ PoincareVector::PoincareManifold::PoincareManifold() {
     this->sqrt_celerity = std::sqrt(this->celerity);
 }
 
-PoincareVector::PoincareManifold::PoincareManifold(double c, int dim) {
+PoincareVector::PoincareManifold::PoincareManifold(double c, int dim, bool lorentzian) {
     this->celerity = c;
     this->dim = dim;
     this->sqrt_celerity = std::sqrt(this->celerity);
+    this->lorentzian_distance = lorentzian;
 }
 
 void PoincareVector::PoincareManifold::mobiusAdd(const double* x, const double* y, double* results) const {
@@ -257,12 +263,16 @@ void PoincareVector::PoincareManifold::mobiusDot(const double lambda, const doub
 }
 
 void PoincareVector::PoincareManifold::diffHelp(matrix* mat, double* tmp) {
+
     double* x = &(mat->at(0)[0]);
-    for (int  i = 0; i < this->dim; i++) x[i] = - x[i];
     double* y = &(mat->at(1)[0]);
 
-    this->mobiusAdd(x, y, tmp);
-
+    if (!isLorentzian()) {
+        for (int  i = 0; i < this->dim; i++) x[i] = - x[i];
+        this->mobiusAdd(x, y, tmp);
+    } else {
+        *tmp = this->dist(x, y);
+    }
 }
 
 double PoincareVector::PoincareManifold::getCelerity() {
@@ -275,10 +285,30 @@ double PoincareVector::PoincareManifold::lambda_x(const double* x) const {
 }
 
 double PoincareVector::PoincareManifold::dist(const double* x, const double* y) {
-    std::vector<double> tmp(this->dim);
-    for (int i = 0; i < this->dim; i++) tmp[i] = -x[i];
-    this->mobiusAdd(&tmp[0], y, &tmp[0]);
-    return 2 * std::atanh(EuclideanGeometry::norm(&tmp[0], this->dim));
+
+
+    if (!isLorentzian()) {
+        std::vector<double> tmp(this->dim);
+        for (int i = 0; i < this->dim; i++) tmp[i] = -x[i];
+        this->mobiusAdd(&tmp[0], y, &tmp[0]);
+        return 2 * std::atanh(EuclideanGeometry::norm(&tmp[0], this->dim));
+    } else {
+        std::vector<double> tmpX(this->dim + 1);
+        std::vector<double> tmpY(this->dim + 1);
+
+        double snX = EuclideanGeometry::normsquare(x, this->dim);
+        double snY = EuclideanGeometry::normsquare(y, this->dim);
+
+        for (int i = 1; i < this->dim + 1; i++) {
+            tmpX[i] = 2 * x[i - 1] / (1 - snX);
+            tmpY[i] = 2 * y[i - 1] / (1 - snY);
+        }
+
+        tmpX[0] = std::sqrt(EuclideanGeometry::normsquare(&tmpX[1], this->dim) + this->celerity);
+        tmpY[0] = std::sqrt(EuclideanGeometry::normsquare(&tmpY[1], this->dim) + this->celerity);
+
+        return -2 * this->celerity - 2 * (-tmpX[0] * tmpY[0] + EuclideanGeometry::dot(&tmpX[1], &tmpY[1], this->dim));
+    }
 }
 
 double PoincareVector::PoincareManifold::getSqrtCelerity() {
@@ -287,4 +317,8 @@ double PoincareVector::PoincareManifold::getSqrtCelerity() {
 
 int PoincareVector::PoincareManifold::getDim() {
     return this->dim;
+}
+
+bool PoincareVector::PoincareManifold::isLorentzian() {
+    return this->lorentzian_distance;
 }

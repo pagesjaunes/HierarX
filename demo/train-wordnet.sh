@@ -24,7 +24,11 @@ ${HIERARX_BIN} \
   --similarity \
   --nesterov \
   --symmetric \
-  --movie
+  --movie \
+  --declr \
+  -minlr=0.0001 \
+  -c=0.01 \
+  --lorentzian
 
 python -m pyhierarx show \
   ${EXPDIR}/embedding.bin \

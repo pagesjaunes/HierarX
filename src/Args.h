@@ -61,6 +61,7 @@ public:
     bool continue__;
     bool declr;
     bool movie;
+    bool lorentzian;
     std::string hmode;
 
     Args();

@@ -73,7 +73,7 @@ void PoincareStack::initVectors() {
 }
 
 void PoincareStack::initVectors(int subspaceDim) {
-    PoincareVector::PoincareManifold* mf = new PoincareVector::PoincareManifold(1.0, subspaceDim);
+    PoincareVector::PoincareManifold* mf = new PoincareVector::PoincareManifold(1.0, subspaceDim, false);
     for (int i = 0; i < this->spaces; i++) {
         this->hvectors->at(i) = new PoincareVector(mf, subspaceDim, this->coordinates + subspaceDim * i);
         this->buffers->at(i) = std::pair<HyperbolicVector *, HyperbolicVector *>(

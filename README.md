@@ -83,7 +83,7 @@ export ANNOY_HOME=${PWD}/third_party/annoy
 export ARGH_HOME=${PWD}/third_party/argh
 
 cd HierarX/build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make HierarX
 ```
 
