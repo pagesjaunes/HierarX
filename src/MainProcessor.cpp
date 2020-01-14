@@ -80,11 +80,6 @@ void MainProcessor::process(BatchMaker bm, int nloop, int idx, bool indisplay) {
 
         if (lossBuffer == lossBuffer) {
             this->optim->step(iset, bm.batch->grads, idx);
-            if (this->ftb != NULL) {
-                for (std::set<int>::iterator it = iset->begin(); it != iset->end(); it++) {
-                    this->ftb->unlock(*it);
-                }
-            }
             iset->clear();
             this->ui->addCount(1, idx);
             this->ui->addLoss(lossBuffer, idx);

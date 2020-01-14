@@ -50,7 +50,7 @@ VecBinder::VecBinder(const Args* args) {
 
     this->ai = new AnnoyIndex<int, double, Angular, Kiss32Random>(this->getDimension());
 
-    this->vectors = new std::vector<VecBinder::SynchronizedVector>(voc_size);
+    this->vectors = new matrix();
     this->vocab = new std::vector<std::string>();
 
     int i = 0;
@@ -58,14 +58,14 @@ VecBinder::VecBinder(const Args* args) {
 
         lr.idx = 0;
         VecBinder::readtill(&lr, ' ', data);
-        std::vector<double> vec(this->getDimension());
+        this->vectors->push_back(std::vector<double>(this->getDimension()));
         this->vocab->push_back(*data);
         for (int j = 0; j < this->getDimension(); j++) {
             VecBinder::readtill(&lr, ' ', data);
-            vec[j] = std::stof(*data);
+            this->vectors->at(i)[j] = std::stof(*data);
         }
-        this->vectors->at(i).setvec(vec);
         i += 1;
+
         std::cout << i << " / " << voc_size << "\r";
     }
 
@@ -79,7 +79,7 @@ VecBinder::VecBinder(const Args* args) {
 
     std::cout << "Building new annoy index\n";
     for (int i = 0; i < this->voc_size; i++) {
-        this->ai->add_item(i, &this->vectors->at(i).vec[0]);
+        this->ai->add_item(i, &this->vectors->at(i)[0]);
     }
     this->ai->build(NTREES);
 
@@ -91,14 +91,9 @@ VecBinder::VecBinder(const Args* args) {
 
 void VecBinder::getRandomVector(std::pair<int, std::vector<double>*>* sample) {
 
-    bool faillock = true;
-    while (faillock) {
-        sample->first = Random::NaturalInteger(this->voc_size);
-        if (this->vectors->at(sample->first).try_lock()) {
-            sample->second = &this->vectors->at(sample->first).vec;
-            faillock = false;
-        }
-    }
+    sample->first = Random::NaturalInteger(this->voc_size);
+    sample->second = &this->vectors->at(sample->first);
+
 }
 
 void VecBinder::getRandomCloseVector(std::vector<double>* vector, int neighborhood, std::pair<int, std::vector<double>*>* sample) {
@@ -107,14 +102,8 @@ void VecBinder::getRandomCloseVector(std::vector<double>* vector, int neighborho
     std::vector<double>* distances = new std::vector<double>();
     this->ai->get_nns_by_vector(&vector->at(0), neighborhood, SEARCH_K, indexes, distances);
 
-    bool faillock = true;
-    while (faillock) {
-        sample->first = indexes->at(Random::NaturalInteger(indexes->size()));
-        if (this->vectors->at(sample->first).try_lock()) {
-            sample->second = &this->vectors->at(sample->first).vec;
-            faillock = false;
-        }
-    }
+    sample->first = indexes->at(Random::NaturalInteger(indexes->size()));
+    sample->second = &this->vectors->at(sample->first);
 
     delete indexes;
     delete distances;
@@ -142,29 +131,6 @@ void VecBinder::readtill(LineReader* input, char delimiter, std::string* buffer)
     }
     input->idx++;
 
-}
-
-void VecBinder::unlock(int i) {
-    this->vectors->at(i).unlock();
-}
+};
 
 
-VecBinder::SynchronizedVector::SynchronizedVector() {
-    this->vec = std::vector<double>();
-}
-
-bool VecBinder::SynchronizedVector::try_lock() {
-    return this->mutex.try_lock();
-}
-
-void VecBinder::SynchronizedVector::unlock() {
-    this->mutex.unlock();
-}
-
-VecBinder::SynchronizedVector::SynchronizedVector(std::vector<double> vector) {
-    this->vec = std::vector<double>(vector);
-}
-
-void VecBinder::SynchronizedVector::setvec(std::vector<double> vector) {
-    this->vec = std::vector<double>(vector);
-}
