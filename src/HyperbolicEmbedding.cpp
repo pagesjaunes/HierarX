@@ -281,20 +281,30 @@ void HyperbolicEmbedding::toPoincare() {
 
 void HyperbolicEmbedding::toLorentz() {
     if (this->format == hierarx::HYPERBOLIC_SPACE::Lorentz) {
-        std::cout << "Embeddinng is already Poincare, no conversion required." << std::endl;
+        std::cout << "Embedding is already Poincare, no conversion required." << std::endl;
     } else if (this->format == hierarx::HYPERBOLIC_SPACE::Poincare) {
+
+        std::cout << "ok - poincare";
         this->format = hierarx::HYPERBOLIC_SPACE::Lorentz;
         for (int i = 0; i < this->getVocSize(); i++) {
+            PoincareVector* pvec = dynamic_cast<PoincareVector*>(this->vectors->at(i));
             double nsv = EuclideanGeometry::normsquare(this->vectors->at(i)->coordinates, this->dim);
             double normalize = 1 - nsv;
             double* newvec = new double[this->dim + 1];
             *newvec = 1 + nsv / normalize;
             for (int j = 1; j < this->dim + 1; j++) {
-                *(newvec + i) = 2 * this->vectors->at(i)->coordinates[j-1] / normalize;
+                *(newvec + j) = 2 * this->vectors->at(i)->coordinates[j-1] / normalize;
             }
-            //free(this->vectors->at(i)->coordinates);
-            this->vectors->at(i)->coordinates = newvec;
+            this->vectors->at(i)->coordinates[0] = std::sqrt(EuclideanGeometry::normsquare(newvec + 1, this->dim) + pvec->manifold->getCelerity());
+            this->vectors->at(i)->dim += 1;
+
+            this->vectors->at(i)->coordinates = (double*) realloc(this->vectors->at(i)->coordinates, (this->dim + 1) * sizeof(double));
+            for (int j = 0; j < this->dim + 1; j++) {
+                this->vectors->at(i)->coordinates[j] = *(newvec + j);
+            }
+            free(newvec);
         }
+        this->dim += 1;
     } else {
         throw "Conversion unavailable for this embedding mode.";
     }
