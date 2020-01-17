@@ -291,13 +291,12 @@ void HyperbolicEmbedding::toLorentz() {
             double nsv = EuclideanGeometry::normsquare(this->vectors->at(i)->coordinates, this->dim);
             double normalize = 1 - nsv;
             double* newvec = new double[this->dim + 1];
-            *newvec = 1 + nsv / normalize;
             for (int j = 1; j < this->dim + 1; j++) {
                 *(newvec + j) = 2 * this->vectors->at(i)->coordinates[j-1] / normalize;
             }
-            this->vectors->at(i)->coordinates[0] = std::sqrt(EuclideanGeometry::normsquare(newvec + 1, this->dim) + pvec->manifold->getCelerity());
-            this->vectors->at(i)->dim += 1;
+            *newvec = std::sqrt(EuclideanGeometry::normsquare(newvec + 1, this->dim) + pvec->manifold->getCelerity());
 
+            this->vectors->at(i)->dim += 1;
             this->vectors->at(i)->coordinates = (double*) realloc(this->vectors->at(i)->coordinates, (this->dim + 1) * sizeof(double));
             for (int j = 0; j < this->dim + 1; j++) {
                 this->vectors->at(i)->coordinates[j] = *(newvec + j);
