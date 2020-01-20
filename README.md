@@ -70,7 +70,7 @@ HierarX compiles on any OS (MacOS, Linux, Windows). It requires [annoy](https://
 ## Installation
 
 ### Build C++ binary
-It requires cmake >= 3.14 and gcc or clang.
+It requires cmake >= 3.14 and gcc or clang. Copy/paste the following:
 
 ```bash
 # Clone HierarX
@@ -82,7 +82,7 @@ git submodule update --init --recursive
 export ANNOY_HOME=${PWD}/third_party/annoy
 export ARGH_HOME=${PWD}/third_party/argh
 
-cd HierarX/build
+cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make HierarX
 ```
