@@ -88,7 +88,7 @@ cdef extern from "PoincareVector.h" nogil:
         cppclass PoincareManifold:
 
             PoincareManifold();
-            PoincareManifold(double, int);
+            PoincareManifold(double, int, bool);
 
             double dist(const double*, const double*);
             int getDim();

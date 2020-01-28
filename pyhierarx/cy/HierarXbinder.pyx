@@ -24,6 +24,7 @@ Contact: ftorregrossa@solocal.com, francois.torregrossa@irisa.fr
 
 from libcpp.vector cimport vector
 from libcpp.string cimport string
+from libcpp cimport bool
 from cy.HierarXbinder cimport PoincareVector, HyperbolicEmbedding, HyperbolicVector
 
 import numpy as np
@@ -95,9 +96,10 @@ cdef class PyPoincareManifold:
     def __cinit__(
         self,
         double c,
-        int dim
+        int dim,
+        bool lorentzian
     ):
-        self.pmf = PoincareVector.PoincareManifold(c, dim)
+        self.pmf = PoincareVector.PoincareManifold(c, dim, lorentzian)
 
     cpdef double distance(
         self,

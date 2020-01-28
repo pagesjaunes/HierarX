@@ -25,7 +25,7 @@ if USE_CYTHON:
             include_dirs=[
                 os.path.join(os.environ['PWD'], "src"),
                 os.environ['ARGH_HOME'],
-                os.environ['ANNOY_HOME']
+                os.path.join(os.environ['ANNOY_HOME'], "src")
             ]
         )
     ])

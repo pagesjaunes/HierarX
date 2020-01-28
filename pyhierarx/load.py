@@ -60,7 +60,8 @@ class HyperbolicVec:
             w, d, _, c, _ = stream.readline().split()
             w, d= int(w), int(d)
 
-            manifold = PyPoincareManifold(c, d)
+            #TODO: handle lorentzian distance
+            manifold = PyPoincareManifold(c, d, false)
             vocabulary = []
             data = np.zeros((w, d))
             for i, l in enumerate(stream.readlines()):

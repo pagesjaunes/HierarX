@@ -136,7 +136,7 @@ HyperbolicEmbedding HyperbolicEmbedding::load(const char* filename) {
 
     ifs.open(filename, std::ios::in);
     if (!ifs.good()) {
-        throw "file is not good";
+        throw std::runtime_error("Can not open file " + std::string(filename));
     }
 
     int coordsDim, metaarg;
@@ -303,7 +303,7 @@ void HyperbolicEmbedding::toLorentz() {
             }
             free(newvec);
         }
-        this->dim += 1;
+        this->dim;
     } else {
         throw "Conversion unavailable for this embedding mode.";
     }
