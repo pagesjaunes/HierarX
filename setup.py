@@ -9,7 +9,7 @@ try:
 except IOError:
     long_description = ""
 
-USE_CYTHON = False
+USE_CYTHON = True
 
 sources = ['pyhierarx/cy/HierarXbinder.pyx']
 if USE_CYTHON:
