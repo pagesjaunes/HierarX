@@ -78,6 +78,15 @@ class Runner:
             v.show(path=outfile)
 
     @staticmethod
+    def tovec(
+        binfile,
+        vecfile
+    ):
+        from pyhierarx.cy import PyHyperbolicEmbedding
+        hemb = PyHyperbolicEmbedding(binfile)
+        hemb.save_vec(vecfile)
+
+    @staticmethod
     def wordnet_exp(
         entity_name,
         outdir,

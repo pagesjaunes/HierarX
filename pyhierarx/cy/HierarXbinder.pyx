@@ -25,7 +25,7 @@ Contact: ftorregrossa@solocal.com, francois.torregrossa@irisa.fr
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libcpp cimport bool
-from cy.HierarXbinder cimport PoincareVector, HyperbolicEmbedding, HyperbolicVector
+from cy.HierarXbinder cimport PoincareVector, HyperbolicEmbedding, HyperbolicVector, fformat_vec
 
 import numpy as np
 
@@ -87,6 +87,12 @@ cdef class PyHyperbolicEmbedding:
         int j
     ):
         return self.hemb.at(i).dist(self.hemb.at(j)[0])
+
+    def save_vec(
+        self,
+        path
+    ):
+        self.hemb.save(bytes(path, encoding='utf-8'), fformat_vec)
 
 cdef class PyPoincareManifold:
 
