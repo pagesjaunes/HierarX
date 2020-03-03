@@ -25,7 +25,6 @@
 #include "VecBinder.h"
 
 #define NTREES 20
-#define SEARCH_K 100
 
 VecBinder::VecBinder(const Args* args) {
 
@@ -80,10 +79,11 @@ VecBinder::VecBinder(const Args* args) {
     std::cout << "Reading finished -- dim: " << this->getDimension() << " voc: " << this->vocab->size() << std::endl;
 
     std::cout << "Building new annoy index\n";
+    this->ntrees = args->ntrees;
     for (int i = 0; i < this->voc_size; i++) {
         this->ai->add_item(i, &this->vectors->at(i)[0]);
     }
-    this->ai->build(NTREES);
+    this->ai->build(this->ntrees);
 
     std::cout << "Done\n";
 

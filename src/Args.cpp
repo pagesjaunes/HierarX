@@ -60,6 +60,7 @@ Args::Args(argh::parser& cmdl) {
     cmdl("maxposthres", posthres) >> maxposthres;
     cmdl("checkpoint", 10000) >> checkpoint;
     cmdl("kneighbors", 100) >> kneighbors;
+    cmdl("ntrees", 20) >> ntrees;
 
     similarity = cmdl["similarity"];
     continue__ = cmdl["continue"];
@@ -92,6 +93,7 @@ Args::Args(argh::parser& cmdl) {
             << "\tmovie (--movie): " << (movie ? "ON" : "OFF") << std::endl
             << "\tlorentzian distance (only for Poincaré embeddings, celerity = beta, --lorentzian): " << (lorentzian ? "ON" : "OFF") << std::endl
             << "\tnumber of approximate neighbors (-kneighbors): " << kneighbors << std::endl
+            << "\tnumber of trees for approximate neighbor search (see annoy doc, -ntrees): " << ntrees << std::endl
             << std::endl;
 
     if (hmode == "Poincare") {
@@ -122,6 +124,8 @@ Args::Args() {
     plateau = 0.10;
     celerity = 1.0;
     checkpoint = 10000;
+    kneighbors = 100;
+    ntrees = 20;
 
     hmode = "Poicnare";
     niter = 100000;

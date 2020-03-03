@@ -43,6 +43,7 @@ private:
     int voc_size;
     int dim;
     int kneighbors;
+    int ntrees;
     AnnoyIndex<int, double, Angular, Kiss32Random>* ai;
     matrix* vectors;
     std::vector<std::string>* vocab;
