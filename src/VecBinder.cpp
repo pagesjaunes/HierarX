@@ -47,6 +47,8 @@ VecBinder::VecBinder(const Args* args) {
     VecBinder::readtill(&lr, ' ', data);
     this->dim = std::stoi(*data);
 
+    this->kneighbors = args->kneighbors;
+
 
     this->ai = new AnnoyIndex<int, double, Angular, Kiss32Random>(this->getDimension());
 
@@ -100,7 +102,7 @@ void VecBinder::getRandomCloseVector(std::vector<double>* vector, int neighborho
 
     std::vector<int>* indexes = new std::vector<int>();
     std::vector<double>* distances = new std::vector<double>();
-    this->ai->get_nns_by_vector(&vector->at(0), neighborhood, SEARCH_K, indexes, distances);
+    this->ai->get_nns_by_vector(&vector->at(0), neighborhood, this->kneighbors, indexes, distances);
 
     sample->first = indexes->at(Random::NaturalInteger(indexes->size()));
     sample->second = &this->vectors->at(sample->first);

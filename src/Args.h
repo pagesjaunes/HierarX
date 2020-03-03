@@ -47,6 +47,7 @@ public:
     int sampling;
     int format;
     int checkpoint;
+    int kneighbors;
     PoincareVector::PoincareManifold* pmf;
     double lr;
     double momentum;
