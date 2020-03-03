@@ -69,6 +69,12 @@ VecBinder::VecBinder(const Args* args) {
 
         std::cout << i << " / " << voc_size << "\r";
     }
+    std::cout << std::endl;
+
+    if (voc_size > this->vectors->size()) {
+        std::cout << "Less words than expected (expected " << voc_size << ", current: " << this->vectors->size() << ")" << std::endl;
+        voc_size = this->vectors->size();
+    }
 
     std::cout << std::endl;
 
@@ -80,7 +86,7 @@ VecBinder::VecBinder(const Args* args) {
 
     std::cout << "Building new annoy index\n";
     this->ntrees = args->ntrees;
-    for (int i = 0; i < this->voc_size; i++) {
+    for (int i = 0; i < voc_size; i++) {
         this->ai->add_item(i, &this->vectors->at(i)[0]);
     }
     this->ai->build(this->ntrees);
