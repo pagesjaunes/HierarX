@@ -27,7 +27,11 @@
 
 #include <vector>
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 #include "EuclideanGeometry.h"
+
+#define DOUBLE_SIZE 20
 
 class HyperbolicVector {
 

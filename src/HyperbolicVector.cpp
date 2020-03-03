@@ -137,12 +137,12 @@ void HyperbolicVector::write(std::ofstream& ofs) {
 
 std::string HyperbolicVector::stringify() {
 
-    std::string A = "";
+    std::ostringstream stream;
+    stream.precision(DOUBLE_SIZE);
     for (int j = 0; j < this->dim; j++) {
-        A += std::to_string(this->at(j));
-        A += " ";
+        stream << std::fixed << this->at(j)  << " ";
     }
-    return A;
+    return stream.str();
 }
 
 HyperbolicVector::~HyperbolicVector() {
