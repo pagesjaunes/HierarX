@@ -139,6 +139,11 @@ void VecBinder::readtill(LineReader* input, char delimiter, std::string* buffer)
     }
     input->idx++;
 
+}
+
+void VecBinder::rebuild() {
+    this->ai->unbuild();
+    this->ai->build(this->ntrees);
 };
 
 

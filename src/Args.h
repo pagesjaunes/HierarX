@@ -49,6 +49,7 @@ public:
     int checkpoint;
     int kneighbors;
     int ntrees;
+    int rebuild;
     PoincareVector::PoincareManifold* pmf;
     double lr;
     double momentum;

@@ -59,6 +59,7 @@ public:
     void getRandomCloseVector(std::vector<double>* vector, int, std::pair<int, std::vector<double>*>*);
     int getDimension();
     std::string getWordAtIndex(int);
+    void rebuild();
 
     std::vector<std::string> getVocab();
 
