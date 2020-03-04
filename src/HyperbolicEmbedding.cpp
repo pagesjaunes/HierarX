@@ -283,10 +283,9 @@ void HyperbolicEmbedding::toPoincare() {
 
 void HyperbolicEmbedding::toLorentz() {
     if (this->format == hierarx::HYPERBOLIC_SPACE::Lorentz) {
-        std::cout << "Embedding is already Poincare, no conversion required." << std::endl;
+        std::cout << "Embedding is already Lorentz, no conversion required." << std::endl;
     } else if (this->format == hierarx::HYPERBOLIC_SPACE::Poincare) {
 
-        std::cout << "ok - poincare";
         this->format = hierarx::HYPERBOLIC_SPACE::Lorentz;
         for (int i = 0; i < this->getVocSize(); i++) {
             PoincareVector* pvec = dynamic_cast<PoincareVector*>(this->vectors->at(i));
