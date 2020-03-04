@@ -136,7 +136,7 @@ HyperbolicEmbedding HyperbolicEmbedding::load(const char* filename) {
 
     ifs.open(filename, std::ios::in);
     if (!ifs.good()) {
-        throw "file is not good";
+        throw std::runtime_error("Can not open file " + std::string(filename));
     }
 
     int coordsDim, metaarg;
@@ -225,6 +225,8 @@ std::string HyperbolicEmbedding::wordAt(int i) const {
 
 void HyperbolicEmbedding::save(const char* filename, HyperbolicEmbedding::FILE_FORMAT format) {
 
+
+
     std::string fn(filename);
     std::string __filename(filename);
 
@@ -281,10 +283,9 @@ void HyperbolicEmbedding::toPoincare() {
 
 void HyperbolicEmbedding::toLorentz() {
     if (this->format == hierarx::HYPERBOLIC_SPACE::Lorentz) {
-        std::cout << "Embedding is already Poincare, no conversion required." << std::endl;
+        std::cout << "Embedding is already Lorentz, no conversion required." << std::endl;
     } else if (this->format == hierarx::HYPERBOLIC_SPACE::Poincare) {
 
-        std::cout << "ok - poincare";
         this->format = hierarx::HYPERBOLIC_SPACE::Lorentz;
         for (int i = 0; i < this->getVocSize(); i++) {
             PoincareVector* pvec = dynamic_cast<PoincareVector*>(this->vectors->at(i));
@@ -303,7 +304,7 @@ void HyperbolicEmbedding::toLorentz() {
             }
             free(newvec);
         }
-        this->dim += 1;
+        this->dim;
     } else {
         throw "Conversion unavailable for this embedding mode.";
     }

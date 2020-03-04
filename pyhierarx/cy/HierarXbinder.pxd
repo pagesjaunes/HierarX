@@ -88,7 +88,7 @@ cdef extern from "PoincareVector.h" nogil:
         cppclass PoincareManifold:
 
             PoincareManifold();
-            PoincareManifold(double, int);
+            PoincareManifold(double, int, bool);
 
             double dist(const double*, const double*);
             int getDim();
@@ -98,11 +98,18 @@ cdef extern from "HyperbolicEmbedding.cpp":
 
 cdef extern from "HyperbolicEmbedding.h" nogil:
 
+    cdef cppclass FILE_FORMAT:
+        pass
+
+    cdef FILE_FORMAT fformat_vec "HyperbolicEmbedding::FILE_FORMAT::vec";
+    cdef FILE_FORMAT fformat_bin "HyperbolicEmbedding::FILE_FORMAT::bin";
+
     cdef cppclass HyperbolicEmbedding:
 
         @staticmethod
         HyperbolicEmbedding load(const char*);
 
+        void save(const char*, FILE_FORMAT);
         HyperbolicVector* at(int) const;
         string wordAt(int) const;
         int getDimension() const;

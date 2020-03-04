@@ -25,7 +25,6 @@
 #include "VecBinder.h"
 
 #define NTREES 20
-#define SEARCH_K 100
 
 VecBinder::VecBinder(const Args* args) {
 
@@ -46,6 +45,8 @@ VecBinder::VecBinder(const Args* args) {
 
     VecBinder::readtill(&lr, ' ', data);
     this->dim = std::stoi(*data);
+
+    this->kneighbors = args->kneighbors;
 
 
     this->ai = new AnnoyIndex<int, double, Angular, Kiss32Random>(this->getDimension());
@@ -68,6 +69,12 @@ VecBinder::VecBinder(const Args* args) {
 
         std::cout << i << " / " << voc_size << "\r";
     }
+    std::cout << std::endl;
+
+    if (voc_size > this->vectors->size()) {
+        std::cout << "Less words than expected (expected " << voc_size << ", current: " << this->vectors->size() << ")" << std::endl;
+        voc_size = this->vectors->size();
+    }
 
     std::cout << std::endl;
 
@@ -78,10 +85,11 @@ VecBinder::VecBinder(const Args* args) {
     std::cout << "Reading finished -- dim: " << this->getDimension() << " voc: " << this->vocab->size() << std::endl;
 
     std::cout << "Building new annoy index\n";
-    for (int i = 0; i < this->voc_size; i++) {
+    this->ntrees = args->ntrees;
+    for (int i = 0; i < voc_size; i++) {
         this->ai->add_item(i, &this->vectors->at(i)[0]);
     }
-    this->ai->build(NTREES);
+    this->ai->build(this->ntrees);
 
     std::cout << "Done\n";
 
@@ -100,7 +108,7 @@ void VecBinder::getRandomCloseVector(std::vector<double>* vector, int neighborho
 
     std::vector<int>* indexes = new std::vector<int>();
     std::vector<double>* distances = new std::vector<double>();
-    this->ai->get_nns_by_vector(&vector->at(0), neighborhood, SEARCH_K, indexes, distances);
+    this->ai->get_nns_by_vector(&vector->at(0), neighborhood, this->kneighbors, indexes, distances);
 
     sample->first = indexes->at(Random::NaturalInteger(indexes->size()));
     sample->second = &this->vectors->at(sample->first);
@@ -131,6 +139,11 @@ void VecBinder::readtill(LineReader* input, char delimiter, std::string* buffer)
     }
     input->idx++;
 
+}
+
+void VecBinder::rebuild() {
+    this->ai->unbuild();
+    this->ai->build(this->ntrees);
 };
 
 

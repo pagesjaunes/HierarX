@@ -78,6 +78,15 @@ class Runner:
             v.show(path=outfile)
 
     @staticmethod
+    def tovec(
+        binfile,
+        vecfile
+    ):
+        from pyhierarx.cy import PyHyperbolicEmbedding
+        hemb = PyHyperbolicEmbedding(binfile)
+        hemb.save_vec(vecfile)
+
+    @staticmethod
     def wordnet_exp(
         entity_name,
         outdir,
@@ -117,7 +126,7 @@ class Runner:
         print('Store families and specificity')
         types = list(wn.synset(entity_name).hyponyms()) + [wn.synset(entity_name)]
         y = [types[get_type(v, wn.synset(entity_name).hyponyms())].name() for v in __entities]
-        mindepth = sum(map(len, wn.synset(entity_name).hypernym_paths())) / len( wn.synset(entity_name).hypernym_paths())
+        mindepth = int(sum(map(len, wn.synset(entity_name).hypernym_paths())) / len( wn.synset(entity_name).hypernym_paths()))
         spec = [int(sum(len(hyp_path) for hyp_path in wn.synset(v).hypernym_paths()) / len(wn.synset(v).hypernym_paths())) - mindepth for v in __entities]
 
         pd.DataFrame({

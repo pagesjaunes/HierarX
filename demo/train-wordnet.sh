@@ -19,7 +19,7 @@ ${HIERARX_BIN} \
   -niter=1000000 \
   -posthres=0 \
   -maxposthres=0.1 \
-  -plateau=0.1 \
+  -plateau=0 \
   -checkpoint=5000 \
   --similarity \
   --nesterov \

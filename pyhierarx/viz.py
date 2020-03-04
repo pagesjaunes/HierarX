@@ -113,7 +113,7 @@ class Vizualiser:
                         ),
                         cmin=0,
                         cmax=self.maxspec + 1,
-                        colorscale=sum([[[i / (self.maxspec + 1), x], [(i + 1) / (self.maxspec + 1), x]] for i, x in enumerate(self.colorscale)], [])
+                        colorscale=sum([[[i / len(self.colorscale), x], [(i + 1) / len(self.colorscale), x]] for i, x in enumerate(self.colorscale)], [])
                     )
                 )
             ]

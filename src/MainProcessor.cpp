@@ -99,25 +99,32 @@ void MainProcessor::process(BatchMaker bm, int nloop, int idx, bool indisplay) {
 
 void MainProcessor::threadedTrain(const Args* args) {
 
-    if (args->nthread == 0) {
+    for (int j = 0; j < (args->niter / args->rebuild); j++) {
+        if (args->nthread == 0) {
 
-        this->ui = new UserInterface(args, this->pemb, this->momentum);
-        this->initProcess(args->niter, 0, true, args);
+            this->ui = new UserInterface(args, this->pemb, this->momentum);
+            this->initProcess(args->rebuild, 0, true, args);
 
-    } else {
+        } else {
 
-        this->ui = new UserInterface(args, this->pemb, this->momentum);
-        std::vector<std::thread> threads;
+            this->ui = new UserInterface(args, this->pemb, this->momentum);
+            std::vector<std::thread> threads;
 
-        for (int i = 0; i < args->nthread; i++)
-            threads.push_back(std::thread([=]() { this->initProcess(args->niter / args->nthread, i, false, args); }));
+            for (int i = 0; i < args->nthread; i++)
+                threads.push_back(
+                        std::thread([=]() { this->initProcess(std::ceil((double) args->rebuild / (double) args->nthread), i, false, args); }));
 
-        int totalCount = 0;
-        while (totalCount < args->niter) totalCount = this->ui->display(this->directory);
+            int totalCount = 0;
+            while (totalCount < args->rebuild) totalCount = this->ui->display(this->directory);
 
 
-        for (int i = 0; i < args->nthread; i++) threads[i].join();
+            for (int i = 0; i < args->nthread; i++) threads[i].join();
 
+        }
+        if (this->ftb != NULL) {
+            std::cout << std::endl << "Rebuilding annoy index" << std::endl;
+            this->ftb->rebuild();
+        }
     }
 
     this->pemb->save((this->directory + "/embedding").c_str());

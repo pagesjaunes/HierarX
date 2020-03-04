@@ -59,6 +59,9 @@ Args::Args(argh::parser& cmdl) {
     cmdl("minlr", 0) >> minlr;
     cmdl("maxposthres", posthres) >> maxposthres;
     cmdl("checkpoint", 10000) >> checkpoint;
+    cmdl("kneighbors", 100) >> kneighbors;
+    cmdl("ntrees", 20) >> ntrees;
+    cmdl("rebuild", 10000) >> rebuild;
 
     similarity = cmdl["similarity"];
     continue__ = cmdl["continue"];
@@ -90,7 +93,12 @@ Args::Args(argh::parser& cmdl) {
             << "\tcheckpoint (-checkpoint): " << checkpoint << std::endl
             << "\tmovie (--movie): " << (movie ? "ON" : "OFF") << std::endl
             << "\tlorentzian distance (only for Poincaré embeddings, celerity = beta, --lorentzian): " << (lorentzian ? "ON" : "OFF") << std::endl
+            << "\tnumber of approximate neighbors (-kneighbors): " << kneighbors << std::endl
+            << "\tnumber of trees for approximate neighbor search (see annoy doc, -ntrees): " << ntrees << std::endl
+            << "\trebuild annoy index every n iteration (only when input is .vec, -rebuild): " << rebuild << std::endl
             << std::endl;
+
+    if (similarity) rebuild = niter;
 
     if (hmode == "Poincare") {
         format = hierarx::HYPERBOLIC_SPACE::Poincare;
@@ -120,6 +128,9 @@ Args::Args() {
     plateau = 0.10;
     celerity = 1.0;
     checkpoint = 10000;
+    kneighbors = 100;
+    ntrees = 20;
+    rebuild = 10000;
 
     hmode = "Poicnare";
     niter = 100000;
