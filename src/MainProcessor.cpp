@@ -99,15 +99,15 @@ void MainProcessor::process(BatchMaker bm, int nloop, int idx, bool indisplay) {
 
 void MainProcessor::threadedTrain(const Args* args) {
 
+    this->ui = new UserInterface(args, this->pemb, this->momentum);
+
     for (int j = 0; j < (args->niter / args->rebuild); j++) {
         if (args->nthread == 0) {
 
-            this->ui = new UserInterface(args, this->pemb, this->momentum);
             this->initProcess(args->rebuild, 0, true, args);
 
         } else {
 
-            this->ui = new UserInterface(args, this->pemb, this->momentum);
             std::vector<std::thread> threads;
 
             for (int i = 0; i < args->nthread; i++)
@@ -115,15 +115,15 @@ void MainProcessor::threadedTrain(const Args* args) {
                         std::thread([=]() { this->initProcess(std::ceil((double) args->rebuild / (double) args->nthread), i, false, args); }));
 
             int totalCount = 0;
-            while (totalCount < args->rebuild) totalCount = this->ui->display(this->directory);
-
+            while (totalCount < args->rebuild) totalCount = this->ui->display(this->directory) - j * args->rebuild;
 
             for (int i = 0; i < args->nthread; i++) threads[i].join();
 
         }
         if (this->ftb != NULL) {
-            std::cout << std::endl << "Rebuilding annoy index" << std::endl;
+            std::cout << std::endl << "Rebuilding annoy index... " ;
             this->ftb->rebuild();
+            std::cout << "Done." << std::endl;
         }
     }
 
