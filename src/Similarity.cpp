@@ -91,6 +91,7 @@ Similarity::Similarity(Args* args) {
     ifs.open(args->input, std::ios::in);
     i = 0;
     std::cout << "Preparing similarity pairs" << std::endl;
+    std::vector<double> scores(nline);
     while (std::getline(ifs, lr.line)) {
         lr.idx = 0;
 
@@ -100,6 +101,7 @@ Similarity::Similarity(Args* args) {
         std::string t = *data;
         VecBinder::readtill(&lr, ',', data);
         double score = std::stof(*data);
+        scores[i] = score;
 
         if (hmap->count(h) && hmap->count(t)) {
 
@@ -128,6 +130,11 @@ Similarity::Similarity(Args* args) {
         std::cout << i++ << " / " << nline <<  "\r";
 
     }
+
+    std::cout << "Find median score... ";
+    std::nth_element(scores.begin(), scores.begin() + scores.size() / 2, scores.end());
+    this->medianScore = scores[scores.size()/2];
+    std::cout << "value: " << this->medianScore << std::endl;
 
     std::cout << "Create Positive sampling tables" << std::endl;
     for (int i = 0; i < keys->size(); i++) {
@@ -203,6 +210,10 @@ double Similarity::getSimilarity(int h, int t) {
     } else {
         return 0;
     }
+}
+
+double Similarity::getMedianScore() {
+    return medianScore;
 }
 
 

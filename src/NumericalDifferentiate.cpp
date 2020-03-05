@@ -24,10 +24,16 @@
 
 #include "NumericalDifferentiate.h"
 
+double NumericalDifferentiate::diff(std::function<double (double)> func, double x0) {
+    double step = adaptativeStep(x0);
+    return (func(x0 + step) - func(x0 - step)) / (2 * step);
+}
+
 double NumericalDifferentiate::diff(double (*func)(double), double x0) {
     double step = adaptativeStep(x0);
     return (func(x0 + step) - func(x0 - step)) / (2 * step);
 }
+
 
 std::vector<double> NumericalDifferentiate::diff(
         double (*func)(std::vector<double>*),
@@ -101,4 +107,3 @@ std::vector<matrix> NumericalDifferentiate::diff(
 double NumericalDifferentiate::adaptativeStep(double x0) {
     return x0 == 0 ? constants::sqreps : constants::sqreps * x0;
 }
-

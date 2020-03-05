@@ -40,6 +40,7 @@ class NumericalDifferentiate {
 
 public:
     static double adaptativeStep(double);
+    static double diff(std::function<double (double)>, double);
     static double diff(double (*)(double), double);
     static std::vector<double> diff(double (*)(std::vector<double>*), std::vector<double>*);
     static std::vector<matrix> diff(std::function<void (matrix*, double*)>, matrix*, int);//std::vector<double> (*)(matrix*), matrix*);

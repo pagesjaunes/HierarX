@@ -39,12 +39,15 @@ BatchMaker::BatchMaker(
     this->ratioNeighbors = args->posthres;
     this->maxRatioValue = args->maxposthres;
     this->totaliter = nloop * args->sampling;
+    this->weighted = args->weighted;
     this->progress = 0;
+    this->alpha = args->alpha;
     assert(this->maxRatioValue >= this->ratioNeighbors);
 
     this->pemb = pemb;
     this->ftb = ftb;
     this->sims = NULL;
+
 
     this->batch = new Batch();
     this->batch->targetIndex = -1;
@@ -172,16 +175,47 @@ BatchMaker::Batch* BatchMaker::iterNextBatch() {
         }
     }
 
+    double cumulative_sum_similarity_negative = 1.0;
+    for (int i = 0; i < this->batch->niter; i++){
+        if (i != this->batch->maxSimIndex) {
+            cumulative_sum_similarity_negative += this->batch->contextSimilarity->at(i);
+        }
+    }
+
     double sum = 0;
     for (int i = 0; i < this->batch->niter; i++) {
 
         double direction = i == this->batch->maxSimIndex ? -1 : 1;
-        double diff;
+        double diff, factor1, factor2, subloss;
 
         if (i == this->batch->maxSimIndex) {
-            diff = NumericalDifferentiate::diff(&BatchMaker::neglogexp, this->batch->losses->at(i));
+
+            switch(this->weighted) {
+                case 0 : factor1 = 1.0; factor2 = 1.0; break;
+                case 1 : factor1 = 1.0; factor2 = this->batch->maxSimValue / this->simNorm(); break;
+                case 2 : factor2 = 1.0; factor1 = this->batch->maxSimValue / this->simNorm(); break;
+                default: throw std::invalid_argument("weighted should be equal to 1 or 2");
+            }
+
+            diff = factor1 *
+                   NumericalDifferentiate::diff([&](double x) { return BatchMaker::neglogexp(x, factor2); },
+                                                this->batch->losses->at(i));
+            subloss =  factor1 * this->neglogexp(this->batch->losses->at(i) * factor2);
+
         } else {
-            diff = NumericalDifferentiate::diff(&BatchMaker::logexp, this->batch->losses->at(i));
+
+            switch(this->weighted) {
+                case 0 : factor1 = 1.0; factor2 = 1.0; break;
+                case 1 : factor1 = 1.0; factor2 = cumulative_sum_similarity_negative / (this->batch->contextSimilarity->at(i) + 1e-8); break;
+                case 2 : factor2 = 1.0; factor1 = cumulative_sum_similarity_negative / (this->batch->contextSimilarity->at(i) + 1e-8); break;
+                default: throw std::invalid_argument("weighted should be equal to 1 or 2");
+            }
+
+            diff = factor1 * NumericalDifferentiate::diff([&](double x) {return BatchMaker::logexp(x, factor2);},
+                     this->batch->losses->at(i)) ;
+
+            subloss =  factor1 * this->logexp(this->batch->losses->at(i) * factor2);
+
         }
 
         std::pair<HyperbolicVector*, HyperbolicVector*> gradslist(
@@ -196,8 +230,6 @@ BatchMaker::Batch* BatchMaker::iterNextBatch() {
         );
 
         this->batch->chosen->clear();
-
-        double subloss = this->logexp(direction * this->batch->losses->at(i));
 
         this->batch->loss += direction == -1 ? subloss : (subloss / (this->bs - 1));
 
@@ -239,6 +271,8 @@ double BatchMaker::exp(double x) {
 BatchMaker::BatchMaker(HyperbolicEmbedding* pemb, Similarity* sims, int nloop, const Args* args) {
     this->bs = args->bs;
     this->ratioNeighbors = args->posthres;
+    this->weighted = args->weighted;
+    this->alpha = args->alpha;
 
     this->pemb = pemb;
     this->ftb = NULL;
@@ -284,4 +318,19 @@ BatchMaker::BatchMaker(HyperbolicEmbedding* pemb, Similarity* sims, int nloop, c
 
 double BatchMaker::positiveRatio() {
     return this->ratioNeighbors + this->progress * (this->maxRatioValue - this->ratioNeighbors) / this->totaliter;
+}
+
+double BatchMaker::logexp(double x, double w) {
+    return BatchMaker::logexp(w * x);
+}
+
+double BatchMaker::neglogexp(double x, double w) {
+    return BatchMaker::neglogexp(w * x);
+}
+
+double BatchMaker::simNorm() {
+    if (this->sims != NULL) {
+        return this->sims->getMedianScore();
+    }
+    return this->alpha;
 }
