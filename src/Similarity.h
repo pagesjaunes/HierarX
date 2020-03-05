@@ -51,9 +51,11 @@ private:
     std::map<int, std::set<std::string>>* key2dist;
     std::map<int, std::vector<int>>* resamplers;
     bool symmetric;
+    double medianScore;
 
 
 public:
+
     explicit Similarity(Args*);
     int getVocSize();
     std::vector<std::string> getVocab();
@@ -61,6 +63,7 @@ public:
     double getCloseSimilarity(int, std::pair<int, std::vector<double>*>*);
     double getSimilarity(int, int);
     int getSize(int);
+    double getMedianScore();
 
     static bool compare(const std::pair<std::string, int>&, const std::pair<std::string, int>&);
 

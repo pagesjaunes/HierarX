@@ -50,6 +50,7 @@ public:
     int kneighbors;
     int ntrees;
     int rebuild;
+    int weighted;
     PoincareVector::PoincareManifold* pmf;
     double lr;
     double momentum;
@@ -58,6 +59,7 @@ public:
     double celerity;
     double minlr;
     double maxposthres;
+    double alpha;
     bool similarity;
     bool nesterov;
     bool symmetric;

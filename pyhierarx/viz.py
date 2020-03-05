@@ -56,9 +56,9 @@ class Vizualiser:
 
         if entities is not None:
             self.entities = pd.read_csv(entities) if isinstance(entities, str) else entities
-            assert(self.entities.shape[0] == self.emb.vocsize)
             for _, w in self.entities.iterrows():
-                assert(w['entity'] in self.emb.keys())
+                if w['entity'] not in self.emb.keys():
+                    print("%s was not found!" % w["entity"])
             self.types = sorted(list(set(self.entities['type'])))
             self.maxspec = self.entities.max()['relative-specificity']
             self.colorscale = ['rgb(%d,%d,%d)' % tuple([255 - 255 / self.maxspec * i for _ in range(3)]) for i in range(int(self.maxspec) + 1)]

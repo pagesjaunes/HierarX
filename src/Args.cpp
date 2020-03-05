@@ -62,6 +62,8 @@ Args::Args(argh::parser& cmdl) {
     cmdl("kneighbors", 100) >> kneighbors;
     cmdl("ntrees", 20) >> ntrees;
     cmdl("rebuild", 10000) >> rebuild;
+    cmdl("alpha", 0.5) >> alpha;
+    cmdl("weighted", 0) >> weighted;
 
     similarity = cmdl["similarity"];
     continue__ = cmdl["continue"];
@@ -96,6 +98,8 @@ Args::Args(argh::parser& cmdl) {
             << "\tnumber of approximate neighbors (-kneighbors): " << kneighbors << std::endl
             << "\tnumber of trees for approximate neighbor search (see annoy doc, -ntrees): " << ntrees << std::endl
             << "\trebuild annoy index every n iteration (only when input is .vec, -rebuild): " << rebuild << std::endl
+            << "\tweighted similarity (-weighted={0:none, 1:mode1, 2:mode2}): " << weighted << std::endl
+            << "\talpha to normalise similarities (when --weighted, -alpha): " << alpha << std::endl
             << std::endl;
 
     if (similarity) rebuild = niter;
@@ -131,6 +135,7 @@ Args::Args() {
     kneighbors = 100;
     ntrees = 20;
     rebuild = 10000;
+    alpha = 0.5;
 
     hmode = "Poicnare";
     niter = 100000;
@@ -140,6 +145,7 @@ Args::Args() {
     nesterov = true;
     movie =false;
     lorentzian=false;
+    weighted = false;
     format = hierarx::HYPERBOLIC_SPACE::Poincare;
 
     pmf = new PoincareVector::PoincareManifold(celerity, dim, lorentzian);

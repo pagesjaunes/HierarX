@@ -64,7 +64,9 @@ private:
 
     double ratioNeighbors;
     bool increasingRatio;
+    int weighted;
     double maxRatioValue;
+    double alpha;
     VecBinder* ftb;
     Similarity* sims;
     HyperbolicEmbedding* pemb;
@@ -79,9 +81,12 @@ public:
     Batch* iterNextBatch();
     void initGradients();
     double positiveRatio();
+    double simNorm();
 
     static double logexp(double x);
     static double neglogexp(double x);
+    static double logexp(double x, double w);
+    static double neglogexp(double x, double w);
     static double exp(double x);
 
 };
