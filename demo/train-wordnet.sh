@@ -3,7 +3,7 @@ export ENTITY=$1
 export EXPDIR=${PWD}/experiment-${ENTITY}
 mkdir -p ${EXPDIR}
 
-python -m pyhierarx wordnet-exp "${ENTITY}" ${EXPDIR}
+#python -m pyhierarx wordnet-exp "${ENTITY}" ${EXPDIR}
 
 ${HIERARX_BIN} \
   -dim=2 \
@@ -18,7 +18,7 @@ ${HIERARX_BIN} \
   -momentum=0.5 \
   -niter=1000000 \
   -posthres=0 \
-  -maxposthres=0.1 \
+  -maxposthres=0.5 \
   -plateau=0 \
   -checkpoint=5000 \
   --similarity \
@@ -26,9 +26,10 @@ ${HIERARX_BIN} \
   --symmetric \
   --movie \
   --declr \
-  -minlr=0.0001 \
+  -minlr=0.00001\
   -c=0.01 \
-  --lorentzian
+  --lorentzian \
+  -weighted=3
 
 python -m pyhierarx show \
   ${EXPDIR}/embedding.bin \

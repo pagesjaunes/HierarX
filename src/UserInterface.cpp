@@ -88,11 +88,13 @@ int UserInterface::display(std::string directory) {
     double loss = this->meanLoss();
     double meanps = this->meanPosthres();
 
+    std::cout << std::fixed << "n: " << totalCount << " -- loss: " << loss ;
+
     if (this->ps) {
-        std::cout << "n: " << std::to_string(totalCount) << " -- loss: " << std::to_string(loss) << " -- avg posthres: " << std::to_string(meanps) << "\r";
-    } else {
-        std::cout << "n: " << totalCount << " -- loss: " << loss << "\r";
+        std::cout << " posthres: "<< meanps;
     }
+
+    std::cout << "\r";
 
     if (totalCount / this->checkpoint != this->cret) {
         this->cret = totalCount / this->checkpoint;
