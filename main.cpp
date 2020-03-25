@@ -129,6 +129,7 @@ int main(int argc, char* argv[]) {
     } else {
 
         Args* args = new Args(cmdl);
+        args->record((args->expdir + "/args.csv").c_str());
 
         std::vector<HyperbolicVector*> buffers = std::vector<HyperbolicVector*>();
         if (args->hmode == "Poincare") {

@@ -151,3 +151,32 @@ Args::Args() {
     pmf = new PoincareVector::PoincareManifold(celerity, dim, lorentzian);
 
 }
+
+void Args::record(const char *filename) {
+
+    std::ofstream ofs;
+    ofs.open(filename, std::ios::out);
+
+    ofs << "nvoc,dim,nthread,expdir,input,niter,bs,sampling,format,checkpoint,"
+        << "kneighbors,ntrees,rebuild,weighted,lr,momentum,plateau,posthres,"
+        << "celerity,minlr,maxposthres,alpha,similarity,nesterov,symmetric,"
+        << "declr,lorentzian,hmode" << std::endl;
+
+    ofs << nvoc << "," << dim << "," << nthread << "," << expdir << "," << input << ","
+        << niter << "," << bs << "," << sampling << "," << format << "," << checkpoint << ",";
+
+    if (!symmetric) {
+        ofs << kneighbors << "," << ntrees << "," << rebuild << ",";
+    } else {
+        ofs << "N/A,N/A,N/A,";
+    }
+
+    ofs << weighted << "," << lr << "," << momentum << "," << plateau << "," << posthres << ","
+        << celerity << "," << minlr << "," << maxposthres << "," << alpha << "," << (similarity ? "True" : "False") << ","
+        << (nesterov ? "True" : "False") << "," << (symmetric ? "True" : "False") << ","
+        << (declr ? "True" : "False") << "," << (lorentzian ? "True" : "False")  << "," << hmode;
+
+    ofs.flush();
+    ofs.close();
+
+}

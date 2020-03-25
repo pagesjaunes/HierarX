@@ -72,6 +72,8 @@ public:
     Args();
     Args(argh::parser&);
 
+    void record(const char* path);
+
 };
 
 

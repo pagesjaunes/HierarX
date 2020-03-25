@@ -52,16 +52,18 @@ Similarity::Similarity(Args* args) {
         VecBinder::readtill(&lr, ',', data);
         std::string t = *data;
 
-        if (!freqs.count(h)) {
-            freqs.insert({h, 0});
-        }
-        if (!freqs.count(t)) {
-            freqs.insert({t, 0});
-        }
+        if (h != t) {
+            if (!freqs.count(h)) {
+                freqs.insert({h, 0});
+            }
+            if (!freqs.count(t)) {
+                freqs.insert({t, 0});
+            }
 
-        freqs.at(t) += 1;
-        freqs.at(h) += 1;
-        std::cout << nline++ << "\r";
+            freqs.at(t) += 1;
+            freqs.at(h) += 1;
+            std::cout << nline++ << "\r";
+        }
 
     }
     std::cout << std::endl;
@@ -103,32 +105,34 @@ Similarity::Similarity(Args* args) {
         double score = std::stof(*data);
         scores[i] = score;
 
-        if (hmap->count(h) && hmap->count(t)) {
+        if (h != t) {
 
-            hmap->at(h)->push_back(LineFormat(h, t, score));
-            hmap->at(t)->push_back(LineFormat(t, h, score));
-            htmap->insert({{w2k->at(h), w2k->at(t)}, score});
+            if (hmap->count(h) && hmap->count(t)) {
 
-            if (!key2dist->count(w2k->at(h))) {
-                key2dist->insert({w2k->at(h), std::set<std::string>()});
-            }
-            if (!key2dist->at(w2k->at(h)).count(t)) {
-                key2dist->at(w2k->at(h)).insert(t);
-            }
+                hmap->at(h)->push_back(LineFormat(h, t, score));
+                hmap->at(t)->push_back(LineFormat(t, h, score));
+                htmap->insert({{w2k->at(h), w2k->at(t)}, score});
 
-            if (symmetric) {
-                if (!key2dist->count(w2k->at(t))) {
-                    key2dist->insert({w2k->at(t), std::set<std::string>()});
+                if (!key2dist->count(w2k->at(h))) {
+                    key2dist->insert({w2k->at(h), std::set<std::string>()});
                 }
-                if (!key2dist->at(w2k->at(t)).count(h)) {
-                    key2dist->at(w2k->at(t)).insert(h);
+                if (!key2dist->at(w2k->at(h)).count(t)) {
+                    key2dist->at(w2k->at(h)).insert(t);
                 }
+
+                if (symmetric) {
+                    if (!key2dist->count(w2k->at(t))) {
+                        key2dist->insert({w2k->at(t), std::set<std::string>()});
+                    }
+                    if (!key2dist->at(w2k->at(t)).count(h)) {
+                        key2dist->at(w2k->at(t)).insert(h);
+                    }
+                }
+
             }
 
+            std::cout << i++ << " / " << nline << "\r";
         }
-
-        std::cout << i++ << " / " << nline <<  "\r";
-
     }
 
     std::cout << "Find median score... ";
