@@ -15,10 +15,10 @@ ${HIERARX_BIN} \
   -hmode=Poincare \
   -sampling=20 \
   -bs=10 \
-  -momentum=0.5 \
+  -momentum=0.9 \
   -niter=1000000 \
-  -posthres=0.1 \
-  -plateau=0 \
+  -posthres=0 \
+  -plateau=0.1 \
   -checkpoint=5000 \
   --similarity \
   --nesterov \
@@ -27,7 +27,8 @@ ${HIERARX_BIN} \
   --declr \
   -minlr=0.0001\
   -c=1 \
-  -weighted=0
+  -weighted=0 \
+  --earlystop
 
 python -m pyhierarx show \
   ${EXPDIR}/embedding.bin \

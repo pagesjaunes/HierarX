@@ -65,6 +65,7 @@ Args::Args(argh::parser& cmdl) {
     declr = cmdl["declr"];
     movie = cmdl["movie"];
     lorentzian = cmdl["lorentzian"];
+    early_stop = cmdl["earlystop"];
     pmf = new PoincareVector::PoincareManifold(celerity, dim, lorentzian);
 
     if (similarity) rebuild = niter;
@@ -104,6 +105,7 @@ Args::Args() {
     movie =false;
     lorentzian=false;
     weighted = false;
+    early_stop = false;
     format = hierarx::HYPERBOLIC_SPACE::Poincare;
 
     pmf = new PoincareVector::PoincareManifold(celerity, dim, lorentzian);
@@ -118,7 +120,7 @@ void Args::record(const char *filename) {
     ofs << "nvoc,dim,nthread,expdir,input,niter,bs,sampling,format,checkpoint,"
         << "kneighbors,ntrees,rebuild,weighted,lr,momentum,plateau,posthres,"
         << "celerity,minlr,maxposthres,alpha,similarity,nesterov,symmetric,"
-        << "declr,lorentzian,hmode" << std::endl;
+        << "declr,lorentzian,earlystop,hmode" << std::endl;
 
     ofs << nvoc << "," << dim << "," << nthread << "," << expdir << "," << input << ","
         << niter << "," << bs << "," << sampling << "," << format << "," << checkpoint << ",";
@@ -132,7 +134,7 @@ void Args::record(const char *filename) {
     ofs << weighted << "," << lr << "," << momentum << "," << plateau << "," << posthres << ","
         << celerity << "," << minlr << "," << maxposthres << "," << alpha << "," << (similarity ? "True" : "False") << ","
         << (nesterov ? "True" : "False") << "," << (symmetric ? "True" : "False") << ","
-        << (declr ? "True" : "False") << "," << (lorentzian ? "True" : "False")  << "," << hmode;
+        << (declr ? "True" : "False") << "," << (lorentzian ? "True" : "False") << (early_stop ? "True" : "False")  << "," << hmode;
 
     ofs.flush();
     ofs.close();
@@ -171,6 +173,7 @@ void Args::printOut() {
             << "\trebuild annoy index every n iteration (only when input is .vec, -rebuild): " << rebuild << std::endl
             << "\tweighted similarity (-weighted={0:none, 1:mode1, 2:mode2}): " << weighted << std::endl
             << "\talpha to normalise similarities (when --weighted, -alpha): " << alpha << std::endl
+            << "\tearly stop (--earlystop): " << (early_stop ? "ON" : "OFF") << std::endl
             << std::endl;
 }
 

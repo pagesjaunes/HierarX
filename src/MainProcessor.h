@@ -29,6 +29,7 @@
 #include <set>
 #include <mutex>
 #include <thread>
+#include <condition_variable>
 #include "Args.h"
 #include "RSGD.h"
 #include "VecBinder.h"
@@ -37,7 +38,34 @@
 #include "UserInterface.h"
 #include "Similarity.h"
 
+#define EARLY_STOP_THRESHOLD 0.75
+
 class MainProcessor {
+
+public:
+
+    class EarlyStopper{
+    private:
+        std::vector<double> current;
+        std::vector<double> container;
+        double* minimum;
+        int kcurrent;
+        int kcontainer;
+        int size;
+
+    public:
+
+        EarlyStopper(int);
+        void add_loss(double);
+        bool continue_training();
+    };
+
+    MainProcessor();
+    MainProcessor(HyperbolicEmbedding*, HyperbolicEmbedding*, VecBinder*, Similarity*, const Args*);
+    void process(BatchMaker, RSGD*, int, int, bool);
+    void initProcess(int, int, bool, const Args*);
+
+    double threadedTrain(const Args*);
 
 private:
     int sampling_size;
@@ -51,14 +79,12 @@ private:
     std::string directory;
     int format;
     std::vector<std::mutex>* lockers;
+    bool early_stop;
+    bool purse_training;
+    EarlyStopper* earlystopper;
 
-public:
-    MainProcessor();
-    MainProcessor(HyperbolicEmbedding*, HyperbolicEmbedding*, VecBinder*, Similarity*, const Args*);
-    void process(BatchMaker, RSGD*, int, int, bool);
-    void initProcess(int, int, bool, const Args*);
 
-    double threadedTrain(const Args*);
+
 };
 
 

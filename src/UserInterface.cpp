@@ -156,3 +156,10 @@ double UserInterface::meanPosthres() {
     return sum(this->posthres) / this->posthres->size();
 }
 
+bool UserInterface::nonNullLoss() {
+    for (int i = 0; i < losses->size(); i++)
+        if (losses->at(i) == 0)
+            return true;
+    return false;
+}
+
