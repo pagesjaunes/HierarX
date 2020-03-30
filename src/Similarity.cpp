@@ -220,6 +220,10 @@ double Similarity::getMedianScore() {
     return medianScore;
 }
 
+Similarity::Similarity() {
+
+}
+
 
 
 

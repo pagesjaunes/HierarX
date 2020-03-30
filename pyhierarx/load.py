@@ -43,9 +43,13 @@ class HyperbolicVec:
 
     @staticmethod
     def __binloading(
-            f
+        f
     ):
-        hemb = PyHyperbolicEmbedding(f)
+        if isinstance(f, str):
+            hemb = PyHyperbolicEmbedding(f)
+        else:
+            hemb = f
+
         vocsize, dim = hemb.vocsize(), hemb.dimension()
 
         cel = None

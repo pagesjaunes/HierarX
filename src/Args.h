@@ -73,6 +73,8 @@ public:
     Args(argh::parser&);
 
     void record(const char* path);
+    void printOut();
+    void setformat();
 
 };
 

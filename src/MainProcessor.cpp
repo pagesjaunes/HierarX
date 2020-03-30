@@ -25,14 +25,13 @@
 #include "MainProcessor.h"
 
 MainProcessor::MainProcessor(
-        RSGD* optim,
         HyperbolicEmbedding* pemb,
         HyperbolicEmbedding* momentum,
         VecBinder* ftb,
         Similarity* sims,
         const Args* args
         ) {
-    this->optim = optim;
+
     this->pemb = pemb;
     this->momentum = momentum;
     this->ftb = ftb;
@@ -43,25 +42,36 @@ MainProcessor::MainProcessor(
     this->ui = NULL;
     this->directory = args->expdir;
     this->format = args->format;
+
+    this->lockers = new std::vector<std::mutex>(this->pemb->getVocSize());
+
 }
 
 void MainProcessor::initProcess(int nloop, int idx, bool indisplay, const Args* args) {
+
     if (this->ftb != NULL) {
+        HyperbolicEmbedding buffers = HyperbolicEmbedding(args, this->ftb->getVocab(), false);
+        HyperbolicEmbedding momloc = HyperbolicEmbedding(args, this->ftb->getVocab(), false);
         BatchMaker bm = BatchMaker(this->pemb, this->ftb, nloop, args);
-        this->process(bm, nloop, idx, indisplay);
+        RSGD *optim = new RSGD(args, pemb->vectors, momloc.vectors, buffers.vectors, this->lockers);
+        this->process(bm, optim, nloop, idx, indisplay);
     } else if (this->sims != NULL) {
+        HyperbolicEmbedding buffers = HyperbolicEmbedding(args, this->sims->getVocab(), false);
+        HyperbolicEmbedding momloc = HyperbolicEmbedding(args, this->sims->getVocab(), false);
         BatchMaker bm = BatchMaker(this->pemb, this->sims, nloop, args);
-        this->process(bm, nloop, idx, indisplay);
+        RSGD *optim = new RSGD(args, pemb->vectors, momloc.vectors, buffers.vectors, this->lockers);
+        this->process(bm, optim, nloop, idx, indisplay);
     } else {
         throw "Input not understood";
     }
 
 }
 
-void MainProcessor::process(BatchMaker bm, int nloop, int idx, bool indisplay) {
+void MainProcessor::process(BatchMaker bm, RSGD* optim, int nloop, int idx, bool indisplay) {
 
     std::set<int>* iset = new std::set<int>();
     double lossBuffer;
+
 
     for (int i = 0; i < nloop; i++) {
         lossBuffer = 0;
@@ -79,7 +89,7 @@ void MainProcessor::process(BatchMaker bm, int nloop, int idx, bool indisplay) {
 
 
         if (lossBuffer == lossBuffer) {
-            this->optim->step(iset, bm.batch->grads, idx);
+            optim->step(iset, bm.batch->grads, idx);
             iset->clear();
             this->ui->addCount(1, idx);
             this->ui->addLoss(lossBuffer, idx);
@@ -97,9 +107,10 @@ void MainProcessor::process(BatchMaker bm, int nloop, int idx, bool indisplay) {
 
 }
 
-void MainProcessor::threadedTrain(const Args* args) {
+double MainProcessor::threadedTrain(const Args* args) {
 
     this->ui = new UserInterface(args, this->pemb, this->momentum);
+    double loss = 0;
 
     for (int j = 0; j < (args->niter / args->rebuild); j++) {
         if (args->nthread == 0) {
@@ -115,7 +126,11 @@ void MainProcessor::threadedTrain(const Args* args) {
                         std::thread([=]() { this->initProcess(std::ceil((double) args->rebuild / (double) args->nthread), i, false, args); }));
 
             int totalCount = 0;
-            while (totalCount < args->rebuild) totalCount = this->ui->display(this->directory) - j * args->rebuild;
+            while (totalCount < args->rebuild) {
+                std::pair<int, double> total_and_loss = this->ui->display(this->directory);
+                totalCount = total_and_loss.first - j * args->rebuild;
+                loss = total_and_loss.second;
+            }
 
             for (int i = 0; i < args->nthread; i++) threads[i].join();
 
@@ -129,8 +144,14 @@ void MainProcessor::threadedTrain(const Args* args) {
 
     this->pemb->save((this->directory + "/embedding").c_str());
     std::cout << "\n";
+
     free(this->ui);
 
+    return loss;
 
+
+}
+
+MainProcessor::MainProcessor() {
 
 }

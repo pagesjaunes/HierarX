@@ -54,6 +54,7 @@ public:
         int idx;
     };
 
+    VecBinder();
     VecBinder(const Args*);
     void getRandomVector(std::pair<int, std::vector<double>*>*);
     void getRandomCloseVector(std::vector<double>* vector, int, std::pair<int, std::vector<double>*>*);

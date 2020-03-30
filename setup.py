@@ -20,7 +20,7 @@ if USE_CYTHON:
         Extension(
             'pyhierarx.cy',
             sources=sources,
-            extra_compile_args=['-std=gnu++11'],
+            extra_compile_args=['-std=gnu++11', '-O3'],
             language='c++',
             include_dirs=[
                 os.path.join(os.environ['PWD'], "src"),

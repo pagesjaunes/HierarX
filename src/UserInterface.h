@@ -58,7 +58,7 @@ public:
     void resetLoss();
     void save(std::string directory);
 
-    int display(std::string directory);
+    std::pair<int, double> display(std::string directory);
 
     int sumCounts();
     double meanLoss();

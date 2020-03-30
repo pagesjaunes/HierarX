@@ -82,7 +82,7 @@ void UserInterface::setLoss(double value, int idx) {
     this->losses->at(idx) = value;
 }
 
-int UserInterface::display(std::string directory) {
+std::pair<int, double> UserInterface::display(std::string directory) {
 
     int totalCount = this->sumCounts();
     double loss = this->meanLoss();
@@ -106,7 +106,7 @@ int UserInterface::display(std::string directory) {
 
     usleep(500);
 
-    return totalCount;
+    return std::pair<int, double>(totalCount, loss);
 }
 
 /*void UserInterface::drawFig(const char* filename) {

@@ -137,16 +137,21 @@ void PoincareVector::expmap(HyperbolicVector& pvector, HyperbolicVector* buffer)
 }
 
 void PoincareVector::project(double maxi) {
-    double norm = std::max(EuclideanGeometry::norm(this->coordinates, this->dim), MIN_NORM);
-    double maxnorm =  (maxi - this->STABILITY) / norm;
-    for(int i = 0; i < this->dim; i++) {
-        if (this->at(i) == this->at(i)) {
-            this->coordinates[i] = this->at(i) * std::fmin(1, maxnorm);
+    double norm = EuclideanGeometry::norm(this->coordinates, this->dim);
+    double maxnorm =  (maxi - this->STABILITY);
+    if (norm >= maxnorm) {
+        for (int i = 0; i < this->dim; i++) {
+            if (this->at(i) == this->at(i)) {
+                this->coordinates[i] = this->at(i) * maxnorm / norm; //* std::fmin(1, maxnorm / norm);
+            } else {
+                this->coordinates[i] = MIN_NORM;
+            }
+        }
+    } else if (norm < MIN_NORM) {
+        for (int i = 0; i < this->dim; i++) {
             if (std::abs(this->at(i)) < MIN_NORM) {
                 this->coordinates[i] = MIN_NORM;
             }
-        } else {
-            this->coordinates[i] = MIN_NORM;
         }
     }
 }
@@ -199,13 +204,13 @@ void gyration(PoincareVector* u, PoincareVector* v, PoincareVector* w, Hyperboli
     std::vector<double> vcoord = v->get_coordinates();
     std::vector<double> wcoord = w->get_coordinates();
 
-    double su2 = EuclideanGeometry::sumWithFunction(&ucoord, &EuclideanGeometry::square);
-    double sv2 = EuclideanGeometry::sumWithFunction(&vcoord, &EuclideanGeometry::square);
-    double suv = EuclideanGeometry::sumElementWiseFunction(&ucoord, &vcoord, &EuclideanGeometry::product);
-    double suw = EuclideanGeometry::sumElementWiseFunction(&ucoord, &wcoord, &EuclideanGeometry::product);
-    double svw = EuclideanGeometry::sumElementWiseFunction(&vcoord, &wcoord, &EuclideanGeometry::product);
+    double su2 = EuclideanGeometry::dot(&ucoord, &ucoord); //EuclideanGeometry::sumWithFunction(&ucoord, &EuclideanGeometry::square);
+    double sv2 = EuclideanGeometry::dot(&vcoord, &vcoord);//EuclideanGeometry::sumWithFunction(&vcoord, &EuclideanGeometry::square);
+    double suv = EuclideanGeometry::dot(&ucoord, &vcoord);//EuclideanGeometry::sumElementWiseFunction(&ucoord, &vcoord, &EuclideanGeometry::product);
+    double suw = EuclideanGeometry::dot(&ucoord, &wcoord);// &EuclideanGeometry::product);
+    double svw = EuclideanGeometry::dot(&vcoord, &wcoord);// &EuclideanGeometry::product);
 
-    double a = - suv * sv2 + svw + 2.0 * svw * suv;
+    double a = - suw * sv2 + svw + 2.0 * svw * suv;
     double b = - svw * su2 - suw;
     double d = std::fmax(1.0 + 2.0 * suv + su2 * sv2, MIN_VALUE);
 
@@ -224,7 +229,7 @@ void gyration(PoincareVector* u, PoincareVector* v, PoincareVector* w, Hyperboli
 }
 
 void parallelTransport(PoincareVector* x, PoincareVector* y, PoincareVector* u, HyperbolicVector* buffer) {
-
+    // move u in Tx to Ty
     PoincareVector negX = -*x;
     gyration(y, &negX, u, buffer);
     buffer->eucmul(x->lambda_x() / y->lambda_x(), buffer);
@@ -248,7 +253,7 @@ void PoincareVector::PoincareManifold::mobiusAdd(const double* x, const double* 
     double xsquare = EuclideanGeometry::dot(x, x, this->dim);
     double ysquare = EuclideanGeometry::dot(y, y, this->dim);
     double xydot = EuclideanGeometry::dot(x, y, this->dim);
-    double denom = std::fmax(std::abs(1 + 2 * this->celerity * xydot + this->celerity * this->celerity * ysquare * xsquare), this->MIN_NORM);
+    double denom = 1 + 2 * this->celerity * xydot + this->celerity * this->celerity * ysquare * xsquare;//), this->MIN_NORM);
 
     for(int i = 0; i < this->dim; i++) {
         results[i] = (1 + 2 * this->celerity * xydot + this->celerity * ysquare) * x[i] + (1 - this->celerity * xsquare) * y[i];

@@ -38,13 +38,6 @@ Args::Args(argh::parser& cmdl) {
         throw "Required paramaters are unset";
     }
 
-    std::cout << "Training parameters: \n"
-              << "\tVocabulary size (-nvoc): " << nvoc << std::endl
-              << "\tHyperbolic dimension (-dim): " << dim << std::endl
-              << "\tNumber of thread (-thread): " << nthread << std::endl
-              << "\tExperiment directory (-expdir): " << expdir << std::endl
-              << "\tSimilarity source (-input): " << input << std::endl;
-
 
     // set optional parameters -- sampling and bs are reversed
     cmdl("lr", 1e-2) >> lr;
@@ -74,45 +67,10 @@ Args::Args(argh::parser& cmdl) {
     lorentzian = cmdl["lorentzian"];
     pmf = new PoincareVector::PoincareManifold(celerity, dim, lorentzian);
 
-    std::cout
-            << "\tlearning rate (-lr): " << lr << std::endl
-            << "\tmomentum (-momentum): " << momentum << std::endl
-            << "\tsimilarity (--similarity): " << (similarity ? "ON" : "OFF") << std::endl
-            << "\tnesterov (--nesterov): " << (nesterov ? "ON" : "OFF") << std::endl
-            << "\tcontinue (--continue): " << (continue__ ? "ON" : "OFF") << std::endl
-            << "\tsymmetric (--symmetric): " << (symmetric ? "ON" : "OFF") << std::endl
-            << "\tbatch size (-bs): " << bs << std::endl
-            << "\tsampling in batches (-sampling): " << sampling << std::endl
-            << "\tpositive sampling ratio (-posthres): " << posthres << std::endl
-            << "\tmaximum positive sampling (continuously increasing, -maxposthres): " << maxposthres << std::endl
-            << "\tcontinue training (--continue): " << (cmdl["continue"] ? "ON" : "OFF") << std::endl
-            << "\tburn-in phase (-plateau): " << plateau << std::endl
-            << "\thyperbolic space (-hmode={'Poincare', 'PoincareStack', 'Lorentz'}): " << hmode << std::endl
-            << "\tnumber of iteration (-niter): " << niter << std::endl
-            << "\tcelerity (hyperbolic curvature, -c): " << celerity << std::endl
-            << "\tdecreasing learning rate (--declr): " << (declr ? "ON" : "OFF") << std::endl
-            << "\tminimum learning rate (-minlr): " << minlr << std::endl
-            << "\tcheckpoint (-checkpoint): " << checkpoint << std::endl
-            << "\tmovie (--movie): " << (movie ? "ON" : "OFF") << std::endl
-            << "\tlorentzian distance (only for Poincaré embeddings, celerity = beta, --lorentzian): " << (lorentzian ? "ON" : "OFF") << std::endl
-            << "\tnumber of approximate neighbors (-kneighbors): " << kneighbors << std::endl
-            << "\tnumber of trees for approximate neighbor search (see annoy doc, -ntrees): " << ntrees << std::endl
-            << "\trebuild annoy index every n iteration (only when input is .vec, -rebuild): " << rebuild << std::endl
-            << "\tweighted similarity (-weighted={0:none, 1:mode1, 2:mode2}): " << weighted << std::endl
-            << "\talpha to normalise similarities (when --weighted, -alpha): " << alpha << std::endl
-            << std::endl;
-
     if (similarity) rebuild = niter;
 
-    if (hmode == "Poincare") {
-        format = hierarx::HYPERBOLIC_SPACE::Poincare;
-    } else if (hmode == "PoincareStack") {
-        format = hierarx::HYPERBOLIC_SPACE::Poincare_Stack;
-    } else if (hmode == "Lorentz") {
-        format = hierarx::HYPERBOLIC_SPACE::Lorentz;
-    } else {
-        throw "Unimplemented hyperbolic space: " + hmode;
-    }
+    this->setformat();
+    this->printOut();
 
 }
 
@@ -180,3 +138,53 @@ void Args::record(const char *filename) {
     ofs.close();
 
 }
+
+void Args::printOut() {
+
+    std::cout << "Training parameters: \n"
+              << "\tVocabulary size (-nvoc): " << nvoc << std::endl
+              << "\tHyperbolic dimension (-dim): " << dim << std::endl
+              << "\tNumber of thread (-thread): " << nthread << std::endl
+              << "\tExperiment directory (-expdir): " << expdir << std::endl
+              << "\tSimilarity source (-input): " << input << std::endl
+              << "\tlearning rate (-lr): " << lr << std::endl
+              << "\tmomentum (-momentum): " << momentum << std::endl
+            << "\tsimilarity (--similarity): " << (similarity ? "ON" : "OFF") << std::endl
+            << "\tnesterov (--nesterov): " << (nesterov ? "ON" : "OFF") << std::endl
+            << "\tcontinue (--continue): " << (continue__ ? "ON" : "OFF") << std::endl
+            << "\tsymmetric (--symmetric): " << (symmetric ? "ON" : "OFF") << std::endl
+            << "\tbatch size (-bs): " << bs << std::endl
+            << "\tsampling in batches (-sampling): " << sampling << std::endl
+            << "\tpositive sampling ratio (-posthres): " << posthres << std::endl
+            << "\tmaximum positive sampling (continuously increasing, -maxposthres): " << maxposthres << std::endl
+            << "\tburn-in phase (-plateau): " << plateau << std::endl
+            << "\thyperbolic space (-hmode={'Poincare', 'PoincareStack', 'Lorentz'}): " << hmode << std::endl
+            << "\tnumber of iteration (-niter): " << niter << std::endl
+            << "\tcelerity (hyperbolic curvature, -c): " << celerity << std::endl
+            << "\tdecreasing learning rate (--declr): " << (declr ? "ON" : "OFF") << std::endl
+            << "\tminimum learning rate (-minlr): " << minlr << std::endl
+            << "\tcheckpoint (-checkpoint): " << checkpoint << std::endl
+            << "\tmovie (--movie): " << (movie ? "ON" : "OFF") << std::endl
+            << "\tlorentzian distance (only for Poincaré embeddings, celerity = beta, --lorentzian): " << (lorentzian ? "ON" : "OFF") << std::endl
+            << "\tnumber of approximate neighbors (-kneighbors): " << kneighbors << std::endl
+            << "\tnumber of trees for approximate neighbor search (see annoy doc, -ntrees): " << ntrees << std::endl
+            << "\trebuild annoy index every n iteration (only when input is .vec, -rebuild): " << rebuild << std::endl
+            << "\tweighted similarity (-weighted={0:none, 1:mode1, 2:mode2}): " << weighted << std::endl
+            << "\talpha to normalise similarities (when --weighted, -alpha): " << alpha << std::endl
+            << std::endl;
+}
+
+void Args::setformat() {
+
+    if (hmode == "Poincare") {
+        format = hierarx::HYPERBOLIC_SPACE::Poincare;
+    } else if (hmode == "PoincareStack") {
+        format = hierarx::HYPERBOLIC_SPACE::Poincare_Stack;
+    } else if (hmode == "Lorentz") {
+        format = hierarx::HYPERBOLIC_SPACE::Lorentz;
+    } else {
+        throw "Unimplemented hyperbolic space: " + hmode;
+    }
+
+}
+

@@ -25,9 +25,12 @@ Contact: ftorregrossa@solocal.com, francois.torregrossa@irisa.fr
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libcpp cimport bool
-from cy.HierarXbinder cimport PoincareVector, HyperbolicEmbedding, HyperbolicVector, fformat_vec
+from cy.HierarXbinder cimport Args, Similarity, VecBinder, MainProcessor, RSGD, PoincareVector, HyperbolicEmbedding, HyperbolicVector, fformat_vec
 
 import numpy as np
+import os
+import sys
+
 
 cdef class PyHyperbolicEmbedding:
 
@@ -38,7 +41,8 @@ cdef class PyHyperbolicEmbedding:
         self,
         path
     ):
-        self.hemb = HyperbolicEmbedding.load(bytes(path, encoding='utf-8'))
+        if isinstance(path, str):
+            self.hemb = HyperbolicEmbedding.load(bytes(path, encoding='utf-8'))
 
     @staticmethod
     def load(path):
@@ -88,6 +92,12 @@ cdef class PyHyperbolicEmbedding:
     ):
         return self.hemb.at(i).dist(self.hemb.at(j)[0])
 
+    cdef void set_hemb(
+        self,
+        HyperbolicEmbedding* h):
+
+        self.hemb = h[0]
+
     def save_vec(
         self,
         path
@@ -115,3 +125,121 @@ cdef class PyPoincareManifold:
         assert(e1.size() == e2.size())
         assert(e1.size() == self.pmf.getDim())
         return self.pmf.dist(&(e1.at(0)), &(e2.at(0)))
+
+
+cdef class PyExperiment:
+
+    cdef:
+        Args* __cargs;
+        HyperbolicEmbedding* pemb;
+        HyperbolicEmbedding* buffers;
+        HyperbolicEmbedding* momentum;
+        Similarity* sims;
+        VecBinder* vb;
+        vector[string] vocab;
+        MainProcessor mp;
+
+    def __cinit__(
+        self,
+        args,
+        record_args = True,
+        verbose = 1):
+
+
+        self.__cargs = new Args()
+
+        self.__cargs.nvoc = args.nvoc
+        self.__cargs.dim = args.dim
+        self.__cargs.nthread = args.nthread
+        self.__cargs.expdir = bytes(args.expdir, encoding='utf-8')
+        self.__cargs.input = bytes(args.input, encoding='utf-8')
+
+
+        self.__cargs.niter = args.niter
+        self.__cargs.bs = args.bs
+        self.__cargs.sampling = args.sampling
+        self.__cargs.checkpoint = args.checkpoint
+        self.__cargs.kneighbors = args.kneighbors
+        self.__cargs.ntrees = args.ntrees
+        self.__cargs.rebuild = args.rebuild
+        self.__cargs.weighted = args.weighted
+
+        self.__cargs.lr = args.lr
+        self.__cargs.momentum = args.momentum
+        self.__cargs.plateau = args.plateau
+        self.__cargs.posthres = args.posthres
+        self.__cargs.celerity = args.celerity
+        self.__cargs.minlr = args.minlr
+        self.__cargs.maxposthres = args.maxposthres
+        self.__cargs.alpha = args.alpha
+        self.__cargs.similarity = args.similarity
+        self.__cargs.nesterov = args.nesterov
+        self.__cargs.symmetric = args.symmetric
+        self.__cargs.continue__ = args.continue__
+        self.__cargs.declr = args.declr
+        self.__cargs.movie = args.movie
+        self.__cargs.lorentzian = args.lorentzian
+        self.__cargs.hmode = bytes(args.hmode, encoding='utf-8')
+
+        self.__cargs.pmf = new PoincareVector.PoincareManifold(self.__cargs.celerity, self.__cargs.dim, self.__cargs.lorentzian)
+
+        if record_args:
+            self.__cargs.record(bytes(os.path.join(args.expdir, "args.csv"), encoding='utf-8'))
+
+        self.__cargs.setformat()
+
+        if verbose >= 1:
+            self.__cargs.printOut()
+
+    def set_run_params(
+        self,
+        niter = None,
+        posthres = None,
+        lr = None
+    ):
+        if niter is not None:
+            self.__cargs.niter = niter
+
+        if posthres is not None:
+            self.__cargs.posthres = posthres
+
+        if lr is not None:
+            self.__cargs.lr = lr
+
+    def init_experiment(
+        self,
+        init_similarity = True,
+        init_vectors = True):
+
+        self.__init_experiment(init_similarity, init_vectors)
+
+
+    cpdef void __init_experiment(
+        self,
+        bool init_similarity,
+        bool init_vectors):
+
+        if init_similarity:
+            self.sims = new Similarity(self.__cargs)
+
+        self.vocab = self.sims.getVocab()
+
+        if init_vectors:
+            self.pemb = new HyperbolicEmbedding(self.__cargs, self.vocab, True)
+            self.momentum = new HyperbolicEmbedding(self.__cargs, self.vocab, True)
+
+
+    cpdef double train(
+        self):
+
+        self.mp = MainProcessor(self.pemb, self.momentum, self.vb, self.sims, self.__cargs)
+        return self.mp.threadedTrain(self.__cargs)
+
+
+    def get_embedding(
+        self):
+        pyhemb = PyHyperbolicEmbedding(None)
+        pyhemb.set_hemb(self.pemb)
+        return pyhemb
+
+

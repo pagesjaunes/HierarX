@@ -175,10 +175,12 @@ BatchMaker::Batch* BatchMaker::iterNextBatch() {
         }
     }
 
+    double expdenominator = 0;
     double cumulative_sum_similarity_negative = 1.0;
     for (int i = 0; i < this->batch->niter; i++){
         if (i != this->batch->maxSimIndex) {
             cumulative_sum_similarity_negative += this->batch->contextSimilarity->at(i);
+            expdenominator += BatchMaker::exp(-this->batch->losses->at(i));
         }
     }
 

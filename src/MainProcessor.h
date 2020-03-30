@@ -27,6 +27,7 @@
 
 #include <vector>
 #include <set>
+#include <mutex>
 #include <thread>
 #include "Args.h"
 #include "RSGD.h"
@@ -42,7 +43,6 @@ private:
     int sampling_size;
     int batch_size;
     double positive_sampling;
-    RSGD* optim;
     VecBinder* ftb;
     Similarity* sims;
     HyperbolicEmbedding* pemb;
@@ -50,13 +50,15 @@ private:
     UserInterface* ui;
     std::string directory;
     int format;
+    std::vector<std::mutex>* lockers;
 
 public:
-    MainProcessor(RSGD*, HyperbolicEmbedding*, HyperbolicEmbedding*, VecBinder*, Similarity*, const Args*);
-    void process(BatchMaker, int, int, bool);
+    MainProcessor();
+    MainProcessor(HyperbolicEmbedding*, HyperbolicEmbedding*, VecBinder*, Similarity*, const Args*);
+    void process(BatchMaker, RSGD*, int, int, bool);
     void initProcess(int, int, bool, const Args*);
 
-    void threadedTrain(const Args*);
+    double threadedTrain(const Args*);
 };
 
 

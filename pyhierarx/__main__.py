@@ -22,10 +22,11 @@ HierarX was developped by: François Torregrossa, Guillaume Gravier, Vincent Cla
 Contact: ftorregrossa@solocal.com, francois.torregrossa@irisa.fr
 """
 
+from pyhierarx.cy import PyHyperbolicEmbedding, PyPoincareManifold
+
 import fire
 import os
 import pandas as pd
-
 from pyhierarx.viz import Vizualiser
 from nltk.corpus import wordnet as wn
 from tqdm import tqdm
@@ -136,5 +137,5 @@ class Runner:
         }).to_csv(os.path.join(outdir, '%s-entities.csv' % entity_name), index=None)
 
 if __name__ == '__main__':
-
+    print('enter')
     fire.Fire(Runner)
