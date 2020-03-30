@@ -58,11 +58,12 @@ public:
     void resetLoss();
     void save(std::string directory);
 
-    int display(std::string directory);
+    std::pair<int, double> display(std::string directory);
 
     int sumCounts();
     double meanLoss();
     double meanPosthres();
+    bool nonNullLoss();
 
     static int sum(std::vector<int>*);
     static double sum(std::vector<double>*);

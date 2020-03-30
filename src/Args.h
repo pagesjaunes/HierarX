@@ -67,10 +67,15 @@ public:
     bool declr;
     bool movie;
     bool lorentzian;
+    bool early_stop;
     std::string hmode;
 
     Args();
     Args(argh::parser&);
+
+    void record(const char* path);
+    void printOut();
+    void setformat();
 
 };
 

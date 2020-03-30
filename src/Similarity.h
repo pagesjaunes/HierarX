@@ -56,6 +56,7 @@ private:
 
 public:
 
+    Similarity();
     explicit Similarity(Args*);
     int getVocSize();
     std::vector<std::string> getVocab();

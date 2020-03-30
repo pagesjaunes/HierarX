@@ -24,14 +24,39 @@ Contact: ftorregrossa@solocal.com, francois.torregrossa@irisa.fr
 
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libcpp cimport bool
 
-cdef extern from "Args.cpp":
+cdef extern from "UserInterface.cpp":
     pass
 
-cdef extern from "Args.h" nogil:
-    cdef cppclass Args:
+cdef extern from "UserInterface.h" nogil:
+    cdef cppclass UserInterface:
         pass
 
+cdef extern from "BatchMaker.cpp":
+    pass
+
+cdef extern from "BatchMaker.h" nogil:
+    cdef cppclass BatchMaker:
+        pass
+
+cdef extern from "VecBinder.cpp":
+    pass
+
+cdef extern from "VecBinder.h" nogil:
+    cdef cppclass VecBinder:
+        VecBinder();
+
+cdef extern from "Similarity.cpp":
+    pass
+
+cdef extern from "Similarity.h" nogil:
+    cdef cppclass Similarity:
+
+        Similarity();
+        Similarity(Args*);
+
+        vector[string] getVocab();
 
 cdef extern from "Random.cpp":
     pass
@@ -93,6 +118,52 @@ cdef extern from "PoincareVector.h" nogil:
             double dist(const double*, const double*);
             int getDim();
 
+
+
+cdef extern from "Args.cpp":
+    pass
+
+cdef extern from "Args.h" nogil:
+    cdef cppclass Args:
+        # required
+        int nvoc;
+        int dim;
+        int nthread;
+        string expdir;
+        string input;
+
+        # optional
+        int niter;
+        int bs;
+        int sampling;
+        int format;
+        int checkpoint;
+        int kneighbors;
+        int ntrees;
+        int rebuild;
+        int weighted;
+        PoincareVector.PoincareManifold* pmf;
+        double lr;
+        double momentum;
+        double plateau;
+        double posthres;
+        double celerity;
+        double minlr;
+        double maxposthres;
+        double alpha;
+        bool similarity;
+        bool nesterov;
+        bool symmetric;
+        bool continue__;
+        bool declr;
+        bool movie;
+        bool lorentzian;
+        string hmode;
+
+        void record(const char*);
+        void printOut();
+        void setformat();
+
 cdef extern from "HyperbolicEmbedding.cpp":
     pass
 
@@ -106,6 +177,11 @@ cdef extern from "HyperbolicEmbedding.h" nogil:
 
     cdef cppclass HyperbolicEmbedding:
 
+        vector[HyperbolicVector*]* vectors;
+
+        HyperbolicEmbedding();
+        HyperbolicEmbedding(const Args*, vector[string], bool);
+
         @staticmethod
         HyperbolicEmbedding load(const char*);
 
@@ -114,3 +190,26 @@ cdef extern from "HyperbolicEmbedding.h" nogil:
         string wordAt(int) const;
         int getDimension() const;
         int getVocSize() const;
+
+
+
+cdef extern from "RSGD.cpp":
+    pass
+
+cdef extern from "RSGD.h" nogil:
+    cdef cppclass RSGD:
+
+        RSGD();
+        RSGD(Args*, vector[HyperbolicVector*]*, vector[HyperbolicVector*]*, vector[HyperbolicVector*]*);
+
+
+cdef extern from "MainProcessor.cpp":
+   pass
+
+cdef extern from "MainProcessor.h" nogil:
+   cdef cppclass MainProcessor:
+
+       MainProcessor();
+       MainProcessor(HyperbolicEmbedding*, HyperbolicEmbedding*, VecBinder*, Similarity*, const Args*);
+
+       double threadedTrain(const Args*);

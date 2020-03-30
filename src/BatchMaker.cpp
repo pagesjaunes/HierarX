@@ -175,10 +175,12 @@ BatchMaker::Batch* BatchMaker::iterNextBatch() {
         }
     }
 
+    double expdenominator = 0;
     double cumulative_sum_similarity_negative = 1.0;
     for (int i = 0; i < this->batch->niter; i++){
         if (i != this->batch->maxSimIndex) {
             cumulative_sum_similarity_negative += this->batch->contextSimilarity->at(i);
+            expdenominator += BatchMaker::exp(-this->batch->losses->at(i));
         }
     }
 
@@ -194,6 +196,7 @@ BatchMaker::Batch* BatchMaker::iterNextBatch() {
                 case 0 : factor1 = 1.0; factor2 = 1.0; break;
                 case 1 : factor1 = 1.0; factor2 = this->batch->maxSimValue / this->simNorm(); break;
                 case 2 : factor2 = 1.0; factor1 = this->batch->maxSimValue / this->simNorm(); break;
+                case 3 : factor2 = this->batch->maxSimValue / this->simNorm(); factor1 = this->batch->maxSimValue / this->simNorm(); break;
                 default: throw std::invalid_argument("weighted should be equal to 1 or 2");
             }
 
@@ -208,6 +211,7 @@ BatchMaker::Batch* BatchMaker::iterNextBatch() {
                 case 0 : factor1 = 1.0; factor2 = 1.0; break;
                 case 1 : factor1 = 1.0; factor2 = cumulative_sum_similarity_negative / (this->batch->contextSimilarity->at(i) + 1e-8); break;
                 case 2 : factor2 = 1.0; factor1 = cumulative_sum_similarity_negative / (this->batch->contextSimilarity->at(i) + 1e-8); break;
+                case 3 : factor2 = cumulative_sum_similarity_negative / (this->batch->contextSimilarity->at(i) + 1e-8); factor1 = cumulative_sum_similarity_negative / (this->batch->contextSimilarity->at(i) + 1e-8); break;
                 default: throw std::invalid_argument("weighted should be equal to 1 or 2");
             }
 

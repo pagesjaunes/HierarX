@@ -55,7 +55,7 @@ class Vizualiser:
         self.auto_open = auto_open
 
         if entities is not None:
-            self.entities = pd.read_csv(entities) if isinstance(entities, str) else entities
+            self.entities = pd.read_csv(entities, dtype={'entity': np.str}) if isinstance(entities, str) else entities
             for _, w in self.entities.iterrows():
                 if w['entity'] not in self.emb.keys():
                     print("%s was not found!" % w["entity"])

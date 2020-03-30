@@ -26,6 +26,7 @@
 
 #include <set>
 #include <vector>
+#include <mutex>
 #include "EuclideanGeometry.h"
 #include "HyperbolicVector.h"
 #include "Args.h"
@@ -47,6 +48,7 @@ private:
     std::vector<HyperbolicVector*>* momentumGradients;
     std::vector<HyperbolicVector*>* buffers;
     std::vector<int> counts;
+    std::vector<std::mutex>* lockers;
 
 public:
 
@@ -54,7 +56,8 @@ public:
             const Args*,
             std::vector<HyperbolicVector*>*,
             std::vector<HyperbolicVector*>*,
-            std::vector<HyperbolicVector*>*
+            std::vector<HyperbolicVector*>*,
+            std::vector<std::mutex>*
             );
 
     void updateLR();

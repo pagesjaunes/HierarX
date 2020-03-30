@@ -25,14 +25,13 @@
 #include "MainProcessor.h"
 
 MainProcessor::MainProcessor(
-        RSGD* optim,
         HyperbolicEmbedding* pemb,
         HyperbolicEmbedding* momentum,
         VecBinder* ftb,
         Similarity* sims,
         const Args* args
         ) {
-    this->optim = optim;
+
     this->pemb = pemb;
     this->momentum = momentum;
     this->ftb = ftb;
@@ -43,94 +42,197 @@ MainProcessor::MainProcessor(
     this->ui = NULL;
     this->directory = args->expdir;
     this->format = args->format;
+    this->early_stop = args->early_stop;
+    this->earlystopper = this->early_stop ? new EarlyStopper(args->checkpoint) : NULL;
+    this->purse_training = true;
+
+    this->lockers = new std::vector<std::mutex>(this->pemb->getVocSize());
+
+
 }
 
 void MainProcessor::initProcess(int nloop, int idx, bool indisplay, const Args* args) {
+
     if (this->ftb != NULL) {
+        HyperbolicEmbedding buffers = HyperbolicEmbedding(args, this->ftb->getVocab(), false);
+        HyperbolicEmbedding momloc = HyperbolicEmbedding(args, this->ftb->getVocab(), false);
         BatchMaker bm = BatchMaker(this->pemb, this->ftb, nloop, args);
-        this->process(bm, nloop, idx, indisplay);
+        RSGD *optim = new RSGD(args, pemb->vectors, momloc.vectors, buffers.vectors, this->lockers);
+        this->process(bm, optim, nloop, idx, indisplay);
     } else if (this->sims != NULL) {
+        HyperbolicEmbedding buffers = HyperbolicEmbedding(args, this->sims->getVocab(), false);
+        HyperbolicEmbedding momloc = HyperbolicEmbedding(args, this->sims->getVocab(), false);
         BatchMaker bm = BatchMaker(this->pemb, this->sims, nloop, args);
-        this->process(bm, nloop, idx, indisplay);
+        RSGD *optim = new RSGD(args, pemb->vectors, momloc.vectors, buffers.vectors, this->lockers);
+        this->process(bm, optim, nloop, idx, indisplay);
     } else {
         throw "Input not understood";
     }
 
 }
 
-void MainProcessor::process(BatchMaker bm, int nloop, int idx, bool indisplay) {
+void MainProcessor::process(BatchMaker bm, RSGD* optim, int nloop, int idx, bool indisplay) {
 
     std::set<int>* iset = new std::set<int>();
     double lossBuffer;
 
+
     for (int i = 0; i < nloop; i++) {
-        lossBuffer = 0;
 
-        for (int j = 0; j < this->sampling_size; j++) {
+        if (this->purse_training) {
+            lossBuffer = 0;
 
-            bm.iterNextBatch();
-            iset->insert(bm.batch->targetIndex);
-            for (int k = 0; k < bm.batch->niter; k++) {
-                iset->insert(bm.batch->contextIndexes->at(k));
+            for (int j = 0; j < this->sampling_size; j++) {
+
+                bm.iterNextBatch();
+                iset->insert(bm.batch->targetIndex);
+                for (int k = 0; k < bm.batch->niter; k++) {
+                    iset->insert(bm.batch->contextIndexes->at(k));
+                }
+                lossBuffer += bm.batch->loss / this->sampling_size;
+
             }
-            lossBuffer += bm.batch->loss / this->sampling_size;
-
-        }
 
 
-        if (lossBuffer == lossBuffer) {
-            this->optim->step(iset, bm.batch->grads, idx);
-            iset->clear();
-            this->ui->addCount(1, idx);
-            this->ui->addLoss(lossBuffer, idx);
-            this->ui->setPosthres(bm.positiveRatio(), idx);
+            if (lossBuffer == lossBuffer) {
+                optim->step(iset, bm.batch->grads, idx);
+                iset->clear();
+                this->ui->addCount(1, idx);
+                this->ui->addLoss(lossBuffer, idx);
+                this->ui->setPosthres(bm.positiveRatio(), idx);
+            } else {
+                i--;
+                iset->clear();
+            }
+
+            if (indisplay) {
+                // only if mono threaded
+                this->ui->display(this->directory);
+            }
         } else {
-            i--;
-            iset->clear();
-        }
-
-        if (indisplay) {
-            // only if mono threaded
-            this->ui->display(this->directory);
+            break;
         }
     }
 
 }
 
-void MainProcessor::threadedTrain(const Args* args) {
+double MainProcessor::threadedTrain(const Args* args) {
 
     this->ui = new UserInterface(args, this->pemb, this->momentum);
+    double loss = 0;
 
     for (int j = 0; j < (args->niter / args->rebuild); j++) {
-        if (args->nthread == 0) {
+        if (this->purse_training) {
+            if (args->nthread == 0) {
 
-            this->initProcess(args->rebuild, 0, true, args);
+                this->initProcess(args->rebuild, 0, true, args);
 
-        } else {
+            } else {
 
-            std::vector<std::thread> threads;
+                std::vector<std::thread> threads;
 
-            for (int i = 0; i < args->nthread; i++)
-                threads.push_back(
-                        std::thread([=]() { this->initProcess(std::ceil((double) args->rebuild / (double) args->nthread), i, false, args); }));
+                for (int i = 0; i < args->nthread; i++)
+                    threads.push_back(
+                            std::thread([=]() {
+                                this->initProcess(std::ceil((double) args->rebuild / (double) args->nthread), i, false,
+                                                  args);
+                            }));
 
-            int totalCount = 0;
-            while (totalCount < args->rebuild) totalCount = this->ui->display(this->directory) - j * args->rebuild;
+                int totalCount = 0;
+                while (totalCount < args->rebuild && purse_training) {
+                    bool nullLoss = this->ui->nonNullLoss();
+                    std::pair<int, double> total_and_loss = this->ui->display(this->directory);
+                    totalCount = total_and_loss.first - j * args->rebuild;
+                    loss = total_and_loss.second;
+                    if (this->earlystopper != NULL && !nullLoss) {
+                        this->earlystopper->add_loss(loss);
+                        this->purse_training = this->earlystopper->continue_training();
+                    }
+                }
 
-            for (int i = 0; i < args->nthread; i++) threads[i].join();
+                for (int i = 0; i < args->nthread; i++) threads[i].join();
 
+            }
+            if (this->ftb != NULL) {
+                std::cout << std::endl << "Rebuilding annoy index... ";
+                this->ftb->rebuild();
+                std::cout << "Done." << std::endl;
+            }
         }
-        if (this->ftb != NULL) {
-            std::cout << std::endl << "Rebuilding annoy index... " ;
-            this->ftb->rebuild();
-            std::cout << "Done." << std::endl;
-        }
+    }
+
+    if (!this->purse_training) {
+        std::cout << "Early stop" << std::endl;
     }
 
     this->pemb->save((this->directory + "/embedding").c_str());
     std::cout << "\n";
+
     free(this->ui);
 
+    return loss;
 
 
+}
+
+MainProcessor::MainProcessor() {
+
+}
+
+void MainProcessor::EarlyStopper::add_loss(double loss) {
+    if (this->kcurrent < this->size) {
+        this->current[this->kcurrent] = loss;
+        this->kcurrent += 1;
+    } else {
+        double avg = EuclideanGeometry::sum(&this->current) / this->size;
+        if (this->minimum == NULL) {
+            this->minimum = new double[1];
+            this->minimum[0] = avg;
+        } else {
+            if (this->minimum[0] > avg) {
+                this->minimum[0] = avg;
+            }
+        }
+
+        if (this->kcontainer >= this->container.size()) {
+            this->kcontainer = 0;
+        }
+        this->container[this->kcontainer] = avg;
+        this->kcontainer += 1;
+
+        this->kcurrent = 0;
+        this->add_loss(loss);
+    }
+}
+
+MainProcessor::EarlyStopper::EarlyStopper(int size) {
+    this->current = std::vector<double>(size, 0);
+    this->container = std::vector<double>(5, 0);
+    this->minimum = NULL;
+    this->kcurrent = 0;
+    this->kcontainer = 0;
+    this->size = size;
+}
+
+bool MainProcessor::EarlyStopper::continue_training() {
+    if (this->minimum == NULL) return true;
+    double ratio = 0;
+    int pivot = this->kcontainer == 0 ? this->container.size() - 1 : this->kcontainer - 1;
+    for (int i = pivot; i > 0; i--) {
+        if (this->container[i] >= this->minimum[0]) {
+            ratio += this->container[i - 1] - this->container[i];
+        }
+    }
+
+    if (pivot < this->container.size() - 1 && this->container[this->container.size()] >= this->minimum[0]) {
+        ratio += this->container[this->container.size() - 1] - this->container[0];
+    }
+
+    for (int i = this->container.size() - 1; i > pivot + 1; i--) {
+        if (this->container[i] >= this->minimum[0]) {
+            ratio += this->container[i - 1] - this->container[i];
+        }
+    }
+
+    return ratio >= 0;
 }

@@ -29,7 +29,8 @@ RSGD::RSGD(
         const Args* args,
         std::vector<HyperbolicVector*>* parameters,
         std::vector<HyperbolicVector*>* momentumGradients,
-        std::vector<HyperbolicVector*>* buffers
+        std::vector<HyperbolicVector*>* buffers,
+        std::vector<std::mutex>* lockers
     ) {
 
     assert(parameters->size() == momentumGradients->size());
@@ -48,6 +49,8 @@ RSGD::RSGD(
     this->offset = (int) (args->plateau * ((double) args->niter));
     this->total = args->niter - offset;
     this->minlr = args->minlr;
+
+    this->lockers = lockers;
 };
 
 void RSGD::updateLR() {
@@ -65,11 +68,12 @@ void RSGD::step(std::vector<int>* indexes, std::vector<HyperbolicVector*>* gradi
 
     for (std::vector<int>::iterator it = indexes->begin(); it != indexes->end(); it++) {
 
+        this->lockers->at(*it).lock();
         this->parameters->at(*it)->egrad2hgrad(gradients->at(*it));
 
         gradients->at(*it)->project();
         this->momentumGradients->at(*it)->eucmul(this->momentum, this->momentumGradients->at(*it));
-        this->momentumGradients->at(*it)->eucadd(*(gradients->at(*it)),  this->momentumGradients->at(*it));
+        this->momentumGradients->at(*it)->eucadd(*(gradients->at(*it)), this->momentumGradients->at(*it));
 
         if (this->nesterov) {
             this->momentumGradients->at(*it)->eucmul(this->momentum, this->momentumGradients->at(*it));
@@ -83,13 +87,17 @@ void RSGD::step(std::vector<int>* indexes, std::vector<HyperbolicVector*>* gradi
 
         this->buffers->at(idx)->eucadd(*(this->parameters->at(*it)), this->buffers->at(idx));
         this->parameters->at(*it)->expmap(*(gradients->at(*it)), this->parameters->at(*it));
-        this->buffers->at(idx)->transport(*(gradients->at(*it)), *(this->parameters->at(*it)), this->momentumGradients->at(*it));
+
+        this->parameters->at(*it)->project();
+        this->buffers->at(idx)->transport(*(gradients->at(*it)), *(this->parameters->at(*it)),
+                                          this->momentumGradients->at(*it));
 
         this->parameters->at(*it)->project();
         this->momentumGradients->at(*it)->project();
         gradients->at(*it)->zeros();
 
         this->buffers->at(idx)->zeros();
+        this->lockers->at(*it).unlock();
 
     }
 };
@@ -104,6 +112,7 @@ void RSGD::step(std::set<int>* indexes, std::vector<HyperbolicVector*>* gradient
 
     for (std::set<int>::iterator it = indexes->begin(); it != indexes->end(); it++) {
 
+        this->lockers->at(*it).lock();
         this->parameters->at(*it)->egrad2hgrad(gradients->at(*it));
         gradients->at(*it)->project();
         this->momentumGradients->at(*it)->eucmul(this->momentum, this->momentumGradients->at(*it));
@@ -128,6 +137,7 @@ void RSGD::step(std::set<int>* indexes, std::vector<HyperbolicVector*>* gradient
         gradients->at(*it)->zeros();
 
         this->buffers->at(idx)->zeros();
+        this->lockers->at(*it).unlock();
 
     }
 

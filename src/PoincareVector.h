@@ -26,7 +26,7 @@
 #define HIERARX_POINCAREVECTOR_H
 
 #define MIN_VALUE 1e-6
-#define EPSILON 1e-5
+#define EPSILON 1e-4
 #define MIN_INIT_POINCARE -0.01
 #define MAX_INIT_POINCARE 0.01
 

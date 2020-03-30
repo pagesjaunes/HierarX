@@ -129,21 +129,7 @@ int main(int argc, char* argv[]) {
     } else {
 
         Args* args = new Args(cmdl);
-
-        std::vector<HyperbolicVector*> buffers = std::vector<HyperbolicVector*>();
-        if (args->hmode == "Poincare") {
-            for (int i = 0; i <= args->nthread; i++)
-                buffers.push_back(new PoincareVector(args->pmf, args->dim));
-        } else if (args->hmode == "PoincareStack") {
-            for (int i = 0; i < args->nthread; i++)
-                buffers.push_back(new PoincareStack(args->dim));
-        } else if (args->hmode == "Lorentz") {
-            for (int i = 0; i <= args->nthread; i++)
-                buffers.push_back(new LorentzVector(args->celerity, args->dim));
-        } else {
-            throw "Unimplemented hyperbolic space: " + args->hmode;
-            return EXIT_FAILURE;
-        }
+        args->record((args->expdir + "/args.csv").c_str());
 
         VecBinder* ftb = NULL;
         Similarity* sims = NULL;
@@ -160,6 +146,7 @@ int main(int argc, char* argv[]) {
         args->nvoc = vocab.size();
         HyperbolicEmbedding pembref;
         std::ifstream file(args->expdir + "/embedding.bin");
+
         if (args->continue__ && file.good()) {
             std::cout << "Pursuing experiment stored in " << args->expdir << std::endl;
             std::cout << "Cancelling burn-in phase" << std::endl;
@@ -181,14 +168,13 @@ int main(int argc, char* argv[]) {
             if (cmdl["continue"]) {
                 std::cout << "Unable to load momentum" << std::endl;
             }
-            momref = HyperbolicEmbedding(args, vocab, true);
+            momref = HyperbolicEmbedding(args, vocab, false);
         }
 
         HyperbolicEmbedding *pemb = &pembref;
         HyperbolicEmbedding *momentum = &momref;
-        RSGD *optim = new RSGD(args, pemb->vectors, momentum->vectors, &buffers);
 
-        MainProcessor mp = MainProcessor(optim, pemb, momentum, ftb, sims, args);
+        MainProcessor mp = MainProcessor(pemb, momentum, ftb, sims, args);
         mp.threadedTrain(args);
 
         return EXIT_SUCCESS;

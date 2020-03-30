@@ -99,10 +99,13 @@ void HyperbolicEmbedding::save(const char* filename) {
 
     int subspaceDim;
     double celerity;
+    bool lorentzian;
     switch (this->format) {
         case hierarx::HYPERBOLIC_SPACE::Poincare:
             celerity = dynamic_cast<PoincareVector*>(this->vectors->at(0))->manifold->getCelerity();
+            lorentzian = dynamic_cast<PoincareVector*>(this->vectors->at(0))->manifold->isLorentzian();
             ofs.write((char*) &celerity, sizeof(double));
+            ofs.write((char*) &lorentzian, sizeof(bool));
             break;
         case hierarx::HYPERBOLIC_SPACE::Poincare_Stack:
             subspaceDim = PoincareStack::SUBSPACE_DIM::COMMON;
@@ -147,9 +150,10 @@ HyperbolicEmbedding HyperbolicEmbedding::load(const char* filename) {
     switch (args.format) {
         case hierarx::HYPERBOLIC_SPACE::Poincare:
             ifs.read((char*) &args.celerity, sizeof(double));
+            ifs.read((char*) &args.lorentzian, sizeof(bool));
             coordsDim = args.dim;
-            args.pmf = new PoincareVector::PoincareManifold(args.celerity, args.dim, false);
-            std::cout << "Poincare space (celerity: " << args.celerity << ")";
+            args.pmf = new PoincareVector::PoincareManifold(args.celerity, args.dim, args.lorentzian);
+            std::cout << "Poincare space (celerity: " << args.celerity << ", lorentzian: "<< (args.lorentzian ? "ON" : "OFF") << ")";
             break;
         case hierarx::HYPERBOLIC_SPACE::Poincare_Stack:
             ifs.read((char*) &metaarg, sizeof(int));

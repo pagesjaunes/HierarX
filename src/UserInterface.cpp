@@ -82,17 +82,19 @@ void UserInterface::setLoss(double value, int idx) {
     this->losses->at(idx) = value;
 }
 
-int UserInterface::display(std::string directory) {
+std::pair<int, double> UserInterface::display(std::string directory) {
 
     int totalCount = this->sumCounts();
     double loss = this->meanLoss();
     double meanps = this->meanPosthres();
 
+    std::cout << std::fixed << "n: " << totalCount << " -- loss: " << loss ;
+
     if (this->ps) {
-        std::cout << "n: " << std::to_string(totalCount) << " -- loss: " << std::to_string(loss) << " -- avg posthres: " << std::to_string(meanps) << "\r";
-    } else {
-        std::cout << "n: " << totalCount << " -- loss: " << loss << "\r";
+        std::cout << " posthres: "<< meanps;
     }
+
+    std::cout << "\r";
 
     if (totalCount / this->checkpoint != this->cret) {
         this->cret = totalCount / this->checkpoint;
@@ -104,7 +106,7 @@ int UserInterface::display(std::string directory) {
 
     usleep(500);
 
-    return totalCount;
+    return std::pair<int, double>(totalCount, loss);
 }
 
 /*void UserInterface::drawFig(const char* filename) {
@@ -152,5 +154,12 @@ void UserInterface::setPosthres(double val, int idx) {
 
 double UserInterface::meanPosthres() {
     return sum(this->posthres) / this->posthres->size();
+}
+
+bool UserInterface::nonNullLoss() {
+    for (int i = 0; i < losses->size(); i++)
+        if (losses->at(i) == 0)
+            return true;
+    return false;
 }
 

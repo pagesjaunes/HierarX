@@ -43,9 +43,13 @@ class HyperbolicVec:
 
     @staticmethod
     def __binloading(
-            f
+        f
     ):
-        hemb = PyHyperbolicEmbedding(f)
+        if isinstance(f, str):
+            hemb = PyHyperbolicEmbedding(f)
+        else:
+            hemb = f
+
         vocsize, dim = hemb.vocsize(), hemb.dimension()
 
         cel = None
@@ -54,14 +58,15 @@ class HyperbolicVec:
 
     @staticmethod
     def __vecloading(
-            f
+            f,
+            lorentzian=False
     ):
         with open(f, 'r') as stream:
             w, d, _, c, _ = stream.readline().split()
             w, d= int(w), int(d)
 
             #TODO: handle lorentzian distance
-            manifold = PyPoincareManifold(c, d, False)
+            manifold = PyPoincareManifold(c, d, lorentzian)
             vocabulary = []
             data = np.zeros((w, d))
             for i, l in enumerate(stream.readlines()):
@@ -120,7 +125,7 @@ class HyperbolicVec:
     def keys(self):
         return self.word2idx.keys()
 
-    def nearest(self, w, topk=10, include_distances=True):
+    def nearest(self, w, topk=10, include_distances=True, dfunc='poincare'):
         candidates = []
         for x in self.keys():
             candidates.append((x, self.distance(w, x)))
