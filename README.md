@@ -293,12 +293,28 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 If you use this software please cite : 
 ```bib
-@inproceedings{hierarx,
-  author       = {Torregrossa, François and Gravier, Guillaume and Claveau, Vincent and Kooli, Nihel},
-  title        = {HierarX : un outil pour la découverte de hiérarchies dans des espaces hyperboliques à partir de similarités},
-  date         = {2020},
-  booktitle    = {Accepted at EGC 2020}
+@inproceedings{DBLP:conf/f-egc/TorregrossaGCK20,
+  author    = {Fran{\c{c}}ois Torregrossa and
+               Guillaume Gravier and
+               Vincent Claveau and
+               Nihel Kooli},
+  editor    = {Antoine Cornu{\'{e}}jols and
+               Etienne Cuvelier},
+  title     = {HierarX : un outil pour la d{\'{e}}couverte de hi{\'{e}}rarchies
+               dans des espaces hyperboliques {\`{a}} partir de similarit{\'{e}}s},
+  booktitle = {Extraction et Gestion des Connaissances, {EGC} 2020, Brussels, Belgium,
+               January 27-31, 2020},
+  series    = {{RNTI}},
+  volume    = {{E-36}},
+  pages     = {491--498},
+  publisher = {{\'{E}}ditions {RNTI}},
+  year      = {2020},
+  url       = {http://editions-rnti.fr/?inprocid=1002618},
+  timestamp = {Tue, 09 Jun 2020 18:37:43 +0200},
+  biburl    = {https://dblp.org/rec/conf/f-egc/TorregrossaGCK20.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
 }
+
 ```
 
 Contact: ftorregrossa@solocal.com, francois.torregrossa@irisa.fr
